@@ -21,7 +21,8 @@
      "add": "Add medication",
      "catalog": "Copy from catalog",
      "edit": "Edit medication",
-     "delete": "Delete medication"
+     "delete": "Delete medication",
+     "startliste": "Choose from starter list"
     }
    },
    "add": {
@@ -88,6 +89,22 @@
     "data": {
      "medikament": "Medication",
      "bestaetigen": "Really delete"
+    }
+   },
+   "startliste": {
+    "title": "Choose from starter list",
+    "description": "Common active substances as a template. No warranty, check against the package.",
+    "data": {
+     "wirkstoff": "Active substance"
+    }
+   },
+   "startliste_details": {
+    "title": "{wirkstoff}",
+    "description": "Typical use: {zweck}. Values can be edited freely. No warranty, check against the package.",
+    "data": {
+     "staerke": "Strength",
+     "packungsgroesse": "Pack size (units)",
+     "hersteller": "Manufacturer"
     }
    }
   },

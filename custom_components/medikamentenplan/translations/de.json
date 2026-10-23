@@ -21,7 +21,8 @@
      "add": "Medikament hinzufügen",
      "catalog": "Aus Katalog übernehmen",
      "edit": "Medikament bearbeiten",
-     "delete": "Medikament löschen"
+     "delete": "Medikament löschen",
+     "startliste": "Aus Startliste wählen"
     }
    },
    "add": {
@@ -88,6 +89,22 @@
     "data": {
      "medikament": "Medikament",
      "bestaetigen": "Wirklich löschen"
+    }
+   },
+   "startliste": {
+    "title": "Aus Startliste wählen",
+    "description": "Gängige Wirkstoffe als Vorlage. Angaben ohne Gewähr, bitte mit Packung abgleichen.",
+    "data": {
+     "wirkstoff": "Wirkstoff"
+    }
+   },
+   "startliste_details": {
+    "title": "{wirkstoff}",
+    "description": "Übliche Anwendung: {zweck}. Werte frei änderbar. Angaben ohne Gewähr, bitte mit Packung abgleichen.",
+    "data": {
+     "staerke": "Stärke",
+     "packungsgroesse": "Packungsgröße (Einheiten)",
+     "hersteller": "Hersteller"
     }
    }
   },

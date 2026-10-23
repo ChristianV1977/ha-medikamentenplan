@@ -7,6 +7,7 @@ from homeassistant.helpers import selector as sel
 from homeassistant.util import dt as dt_util
 from homeassistant.util import slugify
 
+from .catalog import fmt, hersteller, startliste
 from .const import CATALOG_FIELDS, DOMAIN, FORMS, MODES
 
 
@@ -19,10 +20,15 @@ def _num(**kw):
     return sel.NumberSelector(sel.NumberSelectorConfig(mode=sel.NumberSelectorMode.BOX, step="any", **kw))
 
 
-def med_schema() -> vol.Schema:
+def _combo(options):
+    return sel.SelectSelector(sel.SelectSelectorConfig(
+        options=list(options), mode=sel.SelectSelectorMode.DROPDOWN, custom_value=True))
+
+
+def med_schema(hersteller_liste=()) -> vol.Schema:
     return vol.Schema({
         vol.Required("name"): str,
-        vol.Optional("hersteller"): str,
+        vol.Optional("hersteller"): _combo(hersteller_liste),
         vol.Optional("wirkstoff"): str,
         vol.Required("darreichungsform", default="tablette"): _select(FORMS, "darreichungsform"),
         vol.Required("dosis", default=1): _num(min=0.01),
@@ -71,19 +77,23 @@ class MedOptionsFlow(OptionsFlow):
     def __init__(self) -> None:
         self._med_id: str | None = None
         self._prefill: dict = {}
+        self._wirkstoff: str | None = None
+        self._hersteller: list[str] = []
 
     @property
     def plan(self):
         return self.hass.data[DOMAIN][self.config_entry.entry_id]
 
     async def async_step_init(self, user_input=None):
-        return self.async_show_menu(step_id="init", menu_options=["add", "catalog", "edit", "delete"])
+        self._hersteller = await self.hass.async_add_executor_job(hersteller)
+        await self.hass.async_add_executor_job(startliste)
+        return self.async_show_menu(step_id="init", menu_options=["add", "startliste", "catalog", "edit", "delete"])
 
     def _med_options(self, plans=None) -> dict[str, str]:
         return {mid: m["name"] for mid, m in self.plan.meds.items()}
 
     async def _form(self, step, errors=None):
-        schema = self.add_suggested_values_to_schema(med_schema(), self._prefill)
+        schema = self.add_suggested_values_to_schema(med_schema(self._hersteller), self._prefill)
         return self.async_show_form(step_id=step, data_schema=schema, errors=errors)
 
     def _validate(self, med):
@@ -105,6 +115,44 @@ class MedOptionsFlow(OptionsFlow):
             return self.async_create_entry(data={})
         self._prefill = {"anbruch": dt_util.now().date().isoformat(), **self._prefill}
         return await self._form("add")
+
+    # --- Startliste: Wirkstoff -> Staerke/Packung/Hersteller -> normales Formular ---
+    async def async_step_startliste(self, user_input=None):
+        if user_input is not None:
+            self._wirkstoff = user_input["wirkstoff"]
+            return await self.async_step_startliste_details()
+        return self.async_show_form(step_id="startliste", data_schema=vol.Schema({
+            vol.Required("wirkstoff"): sel.SelectSelector(sel.SelectSelectorConfig(
+                options=sorted(startliste(), key=str.lower), mode=sel.SelectSelectorMode.DROPDOWN))}))
+
+    async def async_step_startliste_details(self, user_input=None):
+        e = startliste()[self._wirkstoff]
+        errors = {}
+        if user_input is not None:
+            try:
+                pack = float(str(user_input["packungsgroesse"]).replace(",", "."))
+                if pack <= 0:
+                    raise ValueError
+            except ValueError:
+                errors["packungsgroesse"] = "pflicht"
+            else:
+                staerke = user_input["staerke"].strip()
+                name = f"{self._wirkstoff} {staerke}".strip()
+                self._prefill = {
+                    "name": name, "wirkstoff": name, "darreichungsform": e["darreichungsform"],
+                    "einheit": e["einheit"], "packungsgroesse": pack,
+                    "rezeptpflichtig": e["rezeptpflichtig"], "zweck": e["zweck_vorschlag"],
+                    "hersteller": user_input.get("hersteller", ""),
+                }
+                return await self.async_step_add()
+        return self.async_show_form(step_id="startliste_details", errors=errors,
+            description_placeholders={"wirkstoff": self._wirkstoff, "zweck": e["zweck_vorschlag"]},
+            data_schema=vol.Schema({
+                vol.Required("staerke", default=e["staerken"][0]): _combo(e["staerken"]),
+                vol.Required("packungsgroesse", default=fmt(e["packungsgroessen"][0])):
+                    _combo([fmt(p) for p in e["packungsgroessen"]]),
+                vol.Optional("hersteller"): _combo(self._hersteller),
+            }))
 
     async def async_step_catalog(self, user_input=None):
         # Hauskatalog: alle Medikamente aller Plaene als Vorlage (nur Stammdaten, keine Daten/Bestand)

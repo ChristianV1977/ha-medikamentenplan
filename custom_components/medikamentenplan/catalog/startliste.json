@@ -1,0 +1,929 @@
+{
+ "hinweis": "Angaben ohne Gewähr, bitte mit Packung abgleichen. Keine PZN, keine Preise.",
+ "version": 1,
+ "eintraege": [
+  {
+   "wirkstoff": "Ibuprofen",
+   "staerken": [
+    "200 mg",
+    "400 mg",
+    "600 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    10,
+    20,
+    50,
+    100
+   ],
+   "rezeptpflichtig": false,
+   "zweck_vorschlag": "Schmerzen/Fieber",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Paracetamol",
+   "staerken": [
+    "500 mg",
+    "1000 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    10,
+    20,
+    50
+   ],
+   "rezeptpflichtig": false,
+   "zweck_vorschlag": "Schmerzen/Fieber",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Acetylsalicylsäure (ASS)",
+   "staerken": [
+    "100 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    30,
+    50,
+    100
+   ],
+   "rezeptpflichtig": false,
+   "zweck_vorschlag": "Herz-Kreislauf-Schutz / Blutverdünnung",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Acetylsalicylsäure (ASS) Schmerz",
+   "staerken": [
+    "500 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    10,
+    20,
+    50
+   ],
+   "rezeptpflichtig": false,
+   "zweck_vorschlag": "Schmerzen/Fieber",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Diclofenac",
+   "staerken": [
+    "25 mg",
+    "50 mg",
+    "75 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    20,
+    50,
+    100
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Schmerzen/Entzündung",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Metamizol",
+   "staerken": [
+    "500 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    20,
+    50,
+    100
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "starke Schmerzen/Fieber",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Naproxen",
+   "staerken": [
+    "250 mg",
+    "500 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    20,
+    50,
+    100
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Schmerzen/Entzündung",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Pantoprazol",
+   "staerken": [
+    "20 mg",
+    "40 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    14,
+    30,
+    50,
+    100
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Magenschutz/Sodbrennen",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Omeprazol",
+   "staerken": [
+    "10 mg",
+    "20 mg",
+    "40 mg"
+   ],
+   "darreichungsform": "kapsel",
+   "packungsgroessen": [
+    14,
+    30,
+    50,
+    100
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Magenschutz/Sodbrennen",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Esomeprazol",
+   "staerken": [
+    "20 mg",
+    "40 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    14,
+    30,
+    50,
+    100
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Magenschutz/Sodbrennen",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Ramipril",
+   "staerken": [
+    "2,5 mg",
+    "5 mg",
+    "10 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    20,
+    50,
+    100
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Bluthochdruck/Herzschutz",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Lisinopril",
+   "staerken": [
+    "5 mg",
+    "10 mg",
+    "20 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    20,
+    50,
+    100
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Bluthochdruck/Herzschwäche",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Bisoprolol",
+   "staerken": [
+    "1,25 mg",
+    "2,5 mg",
+    "5 mg",
+    "10 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    20,
+    50,
+    100
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Bluthochdruck/Herzschwäche/Herzrhythmus",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Metoprololsuccinat",
+   "staerken": [
+    "47,5 mg",
+    "95 mg",
+    "190 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    30,
+    50,
+    100
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Bluthochdruck/Herzschwäche/Herzrhythmus",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Metoprololtartrat",
+   "staerken": [
+    "50 mg",
+    "100 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    30,
+    50,
+    100
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Bluthochdruck/Herzrhythmus",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Amlodipin",
+   "staerken": [
+    "5 mg",
+    "10 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    20,
+    50,
+    100
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Bluthochdruck",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Candesartan",
+   "staerken": [
+    "4 mg",
+    "8 mg",
+    "16 mg",
+    "32 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    28,
+    56,
+    98
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Bluthochdruck/Herzschwäche",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Valsartan",
+   "staerken": [
+    "40 mg",
+    "80 mg",
+    "160 mg",
+    "320 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    28,
+    56,
+    98
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Bluthochdruck/Herzschwäche",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Losartan",
+   "staerken": [
+    "50 mg",
+    "100 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    28,
+    56,
+    98
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Bluthochdruck",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Hydrochlorothiazid (HCT)",
+   "staerken": [
+    "12,5 mg",
+    "25 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    20,
+    50,
+    100
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Bluthochdruck/Wassereinlagerungen",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Furosemid",
+   "staerken": [
+    "20 mg",
+    "40 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    20,
+    50,
+    100
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Wassereinlagerungen/Herzschwäche",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Torasemid",
+   "staerken": [
+    "5 mg",
+    "10 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    20,
+    50,
+    100
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Wassereinlagerungen/Herzschwäche",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Spironolacton",
+   "staerken": [
+    "25 mg",
+    "50 mg",
+    "100 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    20,
+    50,
+    100
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Herzschwäche/Wassereinlagerungen",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Simvastatin",
+   "staerken": [
+    "20 mg",
+    "40 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    30,
+    50,
+    100
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Cholesterinsenkung",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Atorvastatin",
+   "staerken": [
+    "10 mg",
+    "20 mg",
+    "40 mg",
+    "80 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    30,
+    50,
+    100
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Cholesterinsenkung",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Ezetimib",
+   "staerken": [
+    "10 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    30,
+    50,
+    100
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Cholesterinsenkung",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "L-Thyroxin",
+   "staerken": [
+    "25 µg",
+    "50 µg",
+    "75 µg",
+    "88 µg",
+    "100 µg",
+    "112 µg",
+    "125 µg",
+    "137 µg",
+    "150 µg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    50,
+    100
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Schilddrüsenunterfunktion",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Metformin",
+   "staerken": [
+    "500 mg",
+    "850 mg",
+    "1000 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    30,
+    60,
+    120
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Diabetes Typ 2",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Empagliflozin",
+   "staerken": [
+    "10 mg",
+    "25 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    30,
+    100
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Diabetes Typ 2/Herzschwäche",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Dapagliflozin",
+   "staerken": [
+    "10 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    28,
+    98
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Diabetes Typ 2/Herzschwäche",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Cetirizin",
+   "staerken": [
+    "10 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    7,
+    20,
+    50,
+    100
+   ],
+   "rezeptpflichtig": false,
+   "zweck_vorschlag": "Allergie/Heuschnupfen",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Loratadin",
+   "staerken": [
+    "10 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    10,
+    20,
+    50,
+    100
+   ],
+   "rezeptpflichtig": false,
+   "zweck_vorschlag": "Allergie/Heuschnupfen",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Apixaban",
+   "staerken": [
+    "2,5 mg",
+    "5 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    28,
+    56,
+    98,
+    168
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Blutverdünnung (Thromboseschutz)",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Rivaroxaban",
+   "staerken": [
+    "2,5 mg",
+    "10 mg",
+    "15 mg",
+    "20 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    14,
+    28,
+    42,
+    98
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Blutverdünnung (Thromboseschutz)",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Edoxaban",
+   "staerken": [
+    "30 mg",
+    "60 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    28,
+    56,
+    98
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Blutverdünnung (Thromboseschutz)",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Phenprocoumon",
+   "staerken": [
+    "3 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    30,
+    98
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Blutverdünnung (Thromboseschutz)",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Clopidogrel",
+   "staerken": [
+    "75 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    28,
+    56,
+    98
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Thrombozytenhemmung",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Enoxaparin",
+   "staerken": [
+    "20 mg",
+    "40 mg",
+    "60 mg"
+   ],
+   "darreichungsform": "spritze",
+   "packungsgroessen": [
+    10,
+    20,
+    50
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Thromboseprophylaxe",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Vitamin D3 (Colecalciferol)",
+   "staerken": [
+    "1000 I.E.",
+    "2000 I.E.",
+    "5000 I.E.",
+    "20000 I.E."
+   ],
+   "darreichungsform": "kapsel",
+   "packungsgroessen": [
+    30,
+    60,
+    90,
+    100
+   ],
+   "rezeptpflichtig": false,
+   "zweck_vorschlag": "Vitamin-D-Mangel/Knochen",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Magnesium",
+   "staerken": [
+    "150 mg",
+    "300 mg",
+    "400 mg"
+   ],
+   "darreichungsform": "kapsel",
+   "packungsgroessen": [
+    20,
+    50,
+    100
+   ],
+   "rezeptpflichtig": false,
+   "zweck_vorschlag": "Magnesiummangel/Muskelkrämpfe",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Folsäure",
+   "staerken": [
+    "0,4 mg",
+    "5 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    30,
+    100
+   ],
+   "rezeptpflichtig": false,
+   "zweck_vorschlag": "Folsäuremangel",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Salbutamol Dosieraerosol",
+   "staerken": [
+    "100 µg/Hub"
+   ],
+   "darreichungsform": "spritze",
+   "packungsgroessen": [
+    200
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Asthma/COPD (Bedarfsspray)",
+   "einheit": "Hub"
+  },
+  {
+   "wirkstoff": "Budesonid/Formoterol Pulverinhalator",
+   "staerken": [
+    "160/4,5 µg",
+    "320/9 µg"
+   ],
+   "darreichungsform": "spritze",
+   "packungsgroessen": [
+    60,
+    120,
+    180
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Asthma/COPD (Dauertherapie)",
+   "einheit": "Hub"
+  },
+  {
+   "wirkstoff": "Tiotropium",
+   "staerken": [
+    "18 µg"
+   ],
+   "darreichungsform": "kapsel",
+   "packungsgroessen": [
+    30,
+    60,
+    90
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "COPD (Inhalationskapseln)",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Xylometazolin Nasenspray",
+   "staerken": [
+    "0,05 %",
+    "0,1 %"
+   ],
+   "darreichungsform": "spritze",
+   "packungsgroessen": [
+    10
+   ],
+   "rezeptpflichtig": false,
+   "zweck_vorschlag": "verstopfte Nase/Schnupfen",
+   "einheit": "ml"
+  },
+  {
+   "wirkstoff": "Mometason Nasenspray",
+   "staerken": [
+    "50 µg/Hub"
+   ],
+   "darreichungsform": "spritze",
+   "packungsgroessen": [
+    10,
+    18
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Heuschnupfen/Nasenschleimhautentzündung",
+   "einheit": "ml"
+  },
+  {
+   "wirkstoff": "Hyaluronsäure Augentropfen",
+   "staerken": [
+    "0,1 %",
+    "0,2 %"
+   ],
+   "darreichungsform": "tropfen",
+   "packungsgroessen": [
+    10
+   ],
+   "rezeptpflichtig": false,
+   "zweck_vorschlag": "trockene Augen",
+   "einheit": "ml"
+  },
+  {
+   "wirkstoff": "Latanoprost Augentropfen",
+   "staerken": [
+    "50 µg/ml"
+   ],
+   "darreichungsform": "tropfen",
+   "packungsgroessen": [
+    2.5,
+    7.5
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Grüner Star/Augeninnendruck",
+   "einheit": "ml"
+  },
+  {
+   "wirkstoff": "Diclofenac Gel",
+   "staerken": [
+    "1 %",
+    "2 %"
+   ],
+   "darreichungsform": "salbe",
+   "packungsgroessen": [
+    50,
+    100,
+    150
+   ],
+   "rezeptpflichtig": false,
+   "zweck_vorschlag": "Gelenk-/Muskelschmerzen (äußerlich)",
+   "einheit": "g"
+  },
+  {
+   "wirkstoff": "Sertralin",
+   "staerken": [
+    "50 mg",
+    "100 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    20,
+    50,
+    100
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Depression/Angststörung",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Citalopram",
+   "staerken": [
+    "10 mg",
+    "20 mg",
+    "40 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    20,
+    50,
+    100
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Depression",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Mirtazapin",
+   "staerken": [
+    "15 mg",
+    "30 mg",
+    "45 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    20,
+    50,
+    100
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Depression/Schlafstörung",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Allopurinol",
+   "staerken": [
+    "100 mg",
+    "300 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    30,
+    100
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Gicht/Harnsäuresenkung",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Prednisolon",
+   "staerken": [
+    "5 mg",
+    "20 mg"
+   ],
+   "darreichungsform": "tablette",
+   "packungsgroessen": [
+    20,
+    50,
+    100
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Entzündung/Rheuma/Allergie",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Tamsulosin",
+   "staerken": [
+    "0,4 mg"
+   ],
+   "darreichungsform": "kapsel",
+   "packungsgroessen": [
+    30,
+    60,
+    100
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Prostatabeschwerden",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Pregabalin",
+   "staerken": [
+    "75 mg",
+    "150 mg"
+   ],
+   "darreichungsform": "kapsel",
+   "packungsgroessen": [
+    56,
+    98
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Nervenschmerzen",
+   "einheit": "Stück"
+  },
+  {
+   "wirkstoff": "Gabapentin",
+   "staerken": [
+    "100 mg",
+    "300 mg",
+    "400 mg"
+   ],
+   "darreichungsform": "kapsel",
+   "packungsgroessen": [
+    50,
+    100
+   ],
+   "rezeptpflichtig": true,
+   "zweck_vorschlag": "Nervenschmerzen/Epilepsie",
+   "einheit": "Stück"
+  }
+ ]
+}
