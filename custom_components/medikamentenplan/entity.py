@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from homeassistant.core import callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -34,6 +35,13 @@ class MedEntity(Entity):
     def available(self) -> bool:
         # Abgesetzte: editierbare Felder unavailable (Sensoren/Button bleiben wie bisher)
         return self.med_id in self.plan.meds and not (self._lock_when_stopped and self.plan.meds[self.med_id].get("abgesetzt"))
+
+    @property
+    def extra_state_attributes(self):
+        # Verweis auf den Reichweite-Sensor desselben Medikaments: Dashboard-Filter (auto-entities) gruppiert damit die Geschwister-Entities
+        reg = er.async_get(self.hass)
+        eid = reg.async_get_entity_id("sensor", DOMAIN, f"{self.plan.entry.entry_id}_{self.med_id}_reichweite")
+        return {"reichweite_entity": eid} if eid else None
 
     @callback
     def _refresh(self) -> None:
