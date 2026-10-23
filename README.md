@@ -25,6 +25,18 @@ Beispiel mit auto-entities (HACS) und Mushroom: Vorratskarten über `filter.incl
 
 Fertige Ansicht (Vorratskarten nach Dringlichkeit, Popup mit Hersteller-Pulldown, Packungsgröße, Anzahl und Button "Neue Packung angefangen", Einnahmeplan-Tabelle): [`examples/dashboard-medikamente.yaml`](examples/dashboard-medikamente.yaml). Im Raw-Konfigurationseditor eines Dashboards einfügen und `PLANNAME` durch den Plan-Namen ersetzen. Für alle Pläne oder einen anderen Plan: `python3 tools/gen_dashboard.py [PLAN]`. Benötigt auto-entities, Mushroom und browser_mod (HACS).
 
+## Screenshots
+
+Demo-Plan mit rein fiktiven Medikamenten.
+
+![Übersicht](docs/screenshots/uebersicht.png)
+
+![Vorrat](docs/screenshots/vorrat.png)
+
+![Popup mit Hersteller-Pulldown und Button](docs/screenshots/popup.png)
+
+![Einnahmeplan](docs/screenshots/einnahmeplan.png)
+
 ## Datenschutz
 
 Medikamentendaten sind Gesundheitsdaten. Die Integration setzt alle Attribute auf `_unrecorded_attributes` (kein Verlauf im Recorder), das Geräteregister enthält keinen Hersteller oder Wirkstoff. **Empfohlen:** `sensor.medikament_*`, `button.medikament_*`, `select.medikament_*` und `number.medikament_*` zusätzlich aus Recorder, InfluxDB und Logbuch ausschließen und das Dashboard nur Admins zeigen. Beim Löschen eines Plans wird sein Store entfernt. Das Repo enthält keine echten Daten; die Startliste ist eine eigene Zusammenstellung allgemein bekannter Fakten (keine PZN, keine Preise), **Angaben ohne Gewähr, bitte mit der Packung abgleichen**. Die Integration ersetzt keinen Arzt und keine Apotheke.
