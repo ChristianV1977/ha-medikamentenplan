@@ -15,7 +15,7 @@ Danach: Einstellungen > Geräte & Dienste > Integration hinzufügen > "Medikamen
 - **Bearbeiten**, **Löschen**
 - **Absetzen / Reaktivieren:** Medikament mit Häkchen "Abgesetzt" (Datum optional, Standard heute) kennzeichnen; Häkchen entfernen = reaktivieren. Abgesetzte haben Status `abgesetzt`, keine Reichweite und kein Nachbestelldatum (Ampel entfällt), und werden im Dashboard ausgeblendet bzw. im Abschnitt "Abgesetzt" gelistet. "Neue Packung" ist für abgesetzte gesperrt.
 
-Service `medikamentenplan.neue_packung` (Ziel: Reichweite-Sensor): optional `anbruchdatum`, `anzahl_packungen`, `hersteller`, `packungsgroesse`; nicht angegebene Felder bleiben unverändert. Je Medikament gibt es `text.*_hersteller`, `number.*_packungsgrosse` und `number.*_anzahl_packungen` (Änderung von Hersteller/Größe wird sofort gespeichert, Anzahl ist nur die Vorgabe für die nächste Packung). Der Button "Neue Packung angefangen" setzt Anbruch = heute und Bestand = Packungsgröße × Anzahl Packungen (danach wieder 1); für Abgesetzte sind die Felder unavailable.
+Service `medikamentenplan.neue_packung` (Ziel: Reichweite-Sensor): optional `anbruchdatum`, `anzahl_packungen`, `hersteller`, `packungsgroesse`; nicht angegebene Felder bleiben unverändert. Je Medikament gibt es `select.*_hersteller` (Pulldown aus Herstellerkatalog; freie Werte weiter über den Options-Dialog), `number.*_packungsgrosse` und `number.*_anzahl_packungen` (Änderung von Hersteller/Größe wird sofort gespeichert, Anzahl ist nur die Vorgabe für die nächste Packung). Der Button "Neue Packung angefangen" setzt Anbruch = heute und Bestand = Packungsgröße × Anzahl Packungen (danach wieder 1); für Abgesetzte sind die Felder unavailable.
 
 ## Dashboard
 
@@ -23,7 +23,7 @@ Beispiel mit auto-entities (HACS) und Mushroom: Vorratskarten über `filter.incl
 
 ## Datenschutz
 
-Medikamentendaten sind Gesundheitsdaten. Die Integration setzt alle Attribute auf `_unrecorded_attributes` (kein Verlauf im Recorder), das Geräteregister enthält keinen Hersteller oder Wirkstoff. **Empfohlen:** `sensor.medikament_*`, `button.medikament_*`, `text.medikament_*` und `number.medikament_*` zusätzlich aus Recorder, InfluxDB und Logbuch ausschließen und das Dashboard nur Admins zeigen. Beim Löschen eines Plans wird sein Store entfernt. Das Repo enthält keine echten Daten; die Startliste ist eine eigene Zusammenstellung allgemein bekannter Fakten (keine PZN, keine Preise), **Angaben ohne Gewähr, bitte mit der Packung abgleichen**. Die Integration ersetzt keinen Arzt und keine Apotheke.
+Medikamentendaten sind Gesundheitsdaten. Die Integration setzt alle Attribute auf `_unrecorded_attributes` (kein Verlauf im Recorder), das Geräteregister enthält keinen Hersteller oder Wirkstoff. **Empfohlen:** `sensor.medikament_*`, `button.medikament_*`, `select.medikament_*` und `number.medikament_*` zusätzlich aus Recorder, InfluxDB und Logbuch ausschließen und das Dashboard nur Admins zeigen. Beim Löschen eines Plans wird sein Store entfernt. Das Repo enthält keine echten Daten; die Startliste ist eine eigene Zusammenstellung allgemein bekannter Fakten (keine PZN, keine Preise), **Angaben ohne Gewähr, bitte mit der Packung abgleichen**. Die Integration ersetzt keinen Arzt und keine Apotheke.
 
 ## Entwicklung
 
