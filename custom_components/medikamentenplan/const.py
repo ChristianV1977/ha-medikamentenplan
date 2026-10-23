@@ -1,6 +1,6 @@
 DOMAIN = "medikamentenplan"
 STORAGE_VERSION = 1
-PLATFORMS = ["sensor", "button"]
+PLATFORMS = ["sensor", "button", "text", "number"]
 SIGNAL_UPDATE = f"{DOMAIN}_update_{{}}"
 SIGNAL_NEW = f"{DOMAIN}_new_{{}}"
 

@@ -21,6 +21,7 @@ class Plan:
         self.entry = entry
         self.store = Store(hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}")
         self.meds: dict[str, dict] = {}
+        self.packs: dict[str, int] = {}  # Vorgabe Anzahl Packungen je Medikament, nur im Speicher
 
     @property
     def name(self) -> str:
@@ -55,6 +56,9 @@ class Plan:
             dr.async_get(self.hass).async_update_device(dev.id, name=self.device_name(med_id))
         self.notify()
 
+    async def async_set_field(self, med_id: str, key: str, value) -> None:
+        await self.async_update(med_id, calc.set_field(self.meds[med_id], key, value))
+
     async def async_delete(self, med_id: str) -> None:
         self.meds.pop(med_id, None)
         await self._save()
@@ -67,6 +71,7 @@ class Plan:
             raise ServiceValidationError("Medikament ist abgesetzt - zuerst reaktivieren.")
         start = start or dt_util.now().date()
         await self.async_update(med_id, calc.new_pack(self.meds[med_id], start, packs, hersteller, packungsgroesse))
+        self.packs.pop(med_id, None)
 
     def notify(self) -> None:
         async_dispatcher_send(self.hass, SIGNAL_UPDATE.format(self.entry.entry_id))

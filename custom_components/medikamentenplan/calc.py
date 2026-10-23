@@ -114,6 +114,16 @@ def new_pack(med: dict, start: date, packs: int = 1, hersteller: str | None = No
     return med
 
 
+def set_field(med: dict, key: str, value) -> dict:
+    """Einzelnes Feld setzen; None entfernt es (Hersteller/Packungsgroesse-Entities)."""
+    med = dict(med)
+    if value is None:
+        med.pop(key, None)
+    else:
+        med[key] = value
+    return med
+
+
 def set_stopped(med: dict, stopped: bool, since: date | None = None, today: date | None = None) -> dict:
     """Absetzen (Datum optional, Standard heute) bzw. Reaktivieren (Felder entfernen)."""
     med = dict(med)

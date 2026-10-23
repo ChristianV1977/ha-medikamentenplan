@@ -169,6 +169,19 @@
    "neue_packung": {
     "name": "New pack opened"
    }
+  },
+  "text": {
+   "hersteller": {
+    "name": "Manufacturer"
+   }
+  },
+  "number": {
+   "packungsgroesse": {
+    "name": "Pack size"
+   },
+   "anzahl_packungen": {
+    "name": "Number of packs"
+   }
   }
  },
  "services": {

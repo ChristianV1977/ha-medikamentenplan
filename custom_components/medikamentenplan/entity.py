@@ -12,6 +12,7 @@ from .plan import Plan
 class MedEntity(Entity):
     _attr_has_entity_name = True
     _attr_should_poll = False
+    _lock_when_stopped = False
 
     def __init__(self, plan: Plan, med_id: str, key: str) -> None:
         self.plan = plan
@@ -28,6 +29,11 @@ class MedEntity(Entity):
     async def async_added_to_hass(self) -> None:
         self.async_on_remove(async_dispatcher_connect(
             self.hass, SIGNAL_UPDATE.format(self.plan.entry.entry_id), self._refresh))
+
+    @property
+    def available(self) -> bool:
+        # Abgesetzte: editierbare Felder unavailable (Sensoren/Button bleiben wie bisher)
+        return self.med_id in self.plan.meds and not (self._lock_when_stopped and self.plan.meds[self.med_id].get("abgesetzt"))
 
     @callback
     def _refresh(self) -> None:

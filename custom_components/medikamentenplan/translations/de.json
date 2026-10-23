@@ -222,6 +222,19 @@
    "neue_packung": {
     "name": "Neue Packung angefangen"
    }
+  },
+  "text": {
+   "hersteller": {
+    "name": "Hersteller"
+   }
+  },
+  "number": {
+   "packungsgroesse": {
+    "name": "Packungsgröße"
+   },
+   "anzahl_packungen": {
+    "name": "Anzahl Packungen"
+   }
   }
  },
  "services": {

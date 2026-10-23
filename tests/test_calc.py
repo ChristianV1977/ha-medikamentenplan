@@ -76,3 +76,12 @@ def test_stopped():
     r = calc.set_stopped(s, False)
     assert "abgesetzt" not in r and "abgesetzt_am" not in r
     assert calc.compute(r, T)["status"] == "nachbestellen"  # 5 Stueck Rest, Ampel wieder aktiv
+
+
+def test_entity_fields_and_pack_count():
+    m = calc.set_field({**BASE, "hersteller": "A"}, "hersteller", "B")
+    assert m["hersteller"] == "B" and calc.set_field(m, "hersteller", None).get("hersteller") is None
+    assert calc.set_field(BASE, "packungsgroesse", 50.0)["packungsgroesse"] == 50.0
+    # Button: Packungsgroesse x Anzahl, Anbruch = heute
+    b = calc.new_pack(calc.set_field(BASE, "packungsgroesse", 50.0), T, packs=3)
+    assert b["restbestand"] == 150 and b["anbruch"] == "2026-10-23"

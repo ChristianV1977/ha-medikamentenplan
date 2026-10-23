@@ -24,4 +24,4 @@ class NeuePackung(MedEntity, ButtonEntity):
         super().__init__(plan, med_id, "neue_packung")
 
     async def async_press(self) -> None:
-        await self.plan.async_new_pack(self.med_id)
+        await self.plan.async_new_pack(self.med_id, packs=self.plan.packs.get(self.med_id, 1))
