@@ -4,7 +4,7 @@ Home-Assistant-Custom-Integration: Medikamentenübersicht je Plan (z. B. je Pers
 
 ## Installation
 
-**HACS** (nur wenn das Repo auf GitHub liegt, siehe unten): Custom repository, Kategorie "Integration", dann installieren und HA neu starten.
+**HACS:** Custom repository `https://github.com/ChristianV1977/ha-medikamentenplan`, Kategorie "Integration", dann installieren und HA neu starten.
 **Manuell:** `custom_components/medikamentenplan` nach `<config>/custom_components/` kopieren, HA neu starten.
 Danach: Einstellungen > Geräte & Dienste > Integration hinzufügen > "Medikamentenplan" (ein Eintrag je Plan, Name frei wählbar). Medikamente pflegst du über "Konfigurieren".
 
@@ -31,4 +31,4 @@ Tests: `python3 -m venv .venv && .venv/bin/pip install pytest && .venv/bin/pytho
 
 ## Hinweis zu HACS und GitLab
 
-HACS unterstützt laut Dokumentation nur öffentliche GitHub-Repositories ("Only public repositories hosted on GitHub will be compatible with HACS"). Dieses Repo liegt auf GitLab (`git.v-c-r.de`); für HACS braucht es einen öffentlichen GitHub-Spiegel (z. B. per GitLab-Push-Mirror). Ein Spiegel muss nicht zwingend Releases haben, ein Git-Tag/Release `v1.4.0` ist aber vorhanden.
+HACS unterstuetzt nur oeffentliche GitHub-Repositories. Die Entwicklung laeuft auf einer privaten GitLab-Instanz; das GitHub-Repo ist ein Spiegel.
