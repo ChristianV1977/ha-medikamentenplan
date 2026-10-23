@@ -1,0 +1,165 @@
+{
+ "config": {
+  "step": {
+   "user": {
+    "title": "New medication plan",
+    "description": "Name of the person or plan.",
+    "data": {
+     "name": "Name"
+    }
+   }
+  },
+  "abort": {
+   "already_configured": "Plan already exists."
+  }
+ },
+ "options": {
+  "step": {
+   "init": {
+    "title": "Medication plan",
+    "menu_options": {
+     "add": "Add medication",
+     "catalog": "Copy from catalog",
+     "edit": "Edit medication",
+     "delete": "Delete medication"
+    }
+   },
+   "add": {
+    "title": "Add medication",
+    "data": {
+     "name": "Name",
+     "hersteller": "Manufacturer",
+     "wirkstoff": "Active ingredient / strength",
+     "darreichungsform": "Dosage form",
+     "dosis": "Dose per intake",
+     "einheit": "Unit",
+     "modus": "Schedule",
+     "pro_tag": "Intakes per day (daily)",
+     "intervall_tage": "Every N days (interval)",
+     "bedarf_pro_woche": "Intakes per week (as needed, estimated)",
+     "packungsgroesse": "Pack size (units per pack)",
+     "verordnet": "Prescription/purchase date",
+     "anbruch": "Date current pack was opened",
+     "restbestand": "Stock at opening (empty = pack size)",
+     "zweck": "Purpose",
+     "rezeptpflichtig": "Prescription only",
+     "vorlauf_tage": "Reorder lead time (days)",
+     "notiz": "Note"
+    }
+   },
+   "edit_form": {
+    "title": "Edit medication",
+    "data": {
+     "name": "Name",
+     "hersteller": "Manufacturer",
+     "wirkstoff": "Active ingredient / strength",
+     "darreichungsform": "Dosage form",
+     "dosis": "Dose per intake",
+     "einheit": "Unit",
+     "modus": "Schedule",
+     "pro_tag": "Intakes per day (daily)",
+     "intervall_tage": "Every N days (interval)",
+     "bedarf_pro_woche": "Intakes per week (as needed, estimated)",
+     "packungsgroesse": "Pack size (units per pack)",
+     "verordnet": "Prescription/purchase date",
+     "anbruch": "Date current pack was opened",
+     "restbestand": "Stock at opening (empty = pack size)",
+     "zweck": "Purpose",
+     "rezeptpflichtig": "Prescription only",
+     "vorlauf_tage": "Reorder lead time (days)",
+     "notiz": "Note"
+    }
+   },
+   "catalog": {
+    "title": "Copy from catalog",
+    "description": "Template from existing medications.",
+    "data": {
+     "vorlage": "Vorlage"
+    }
+   },
+   "edit": {
+    "title": "Which medication?",
+    "data": {
+     "medikament": "Medication"
+    }
+   },
+   "delete": {
+    "title": "Delete medication",
+    "data": {
+     "medikament": "Medication",
+     "bestaetigen": "Really delete"
+    }
+   }
+  },
+  "error": {
+   "pflicht": "Please enter a value above 0."
+  },
+  "abort": {
+   "katalog_leer": "Catalog is empty.",
+   "keine_medikamente": "No medications in this plan."
+  }
+ },
+ "selector": {
+  "darreichungsform": {
+   "options": {
+    "tablette": "Tablet",
+    "kapsel": "Capsule",
+    "tropfen": "Drops",
+    "saft": "Syrup",
+    "spray": "Spray",
+    "salbe": "Ointment",
+    "pflaster": "Patch",
+    "zaepfchen": "Suppository",
+    "spritze": "Injection/pen",
+    "pulver": "Powder",
+    "sonstige": "Other"
+   }
+  },
+  "modus": {
+   "options": {
+    "taeglich": "Daily",
+    "intervall": "Every N days",
+    "bedarf": "As needed"
+   }
+  }
+ },
+ "entity": {
+  "sensor": {
+   "reichweite": {
+    "name": "Days remaining"
+   },
+   "nachbestelldatum": {
+    "name": "Reorder date"
+   },
+   "status": {
+    "name": "Status",
+    "state": {
+     "ok": "OK",
+     "nachbestellen": "Reorder soon",
+     "aufgebraucht": "Used up"
+    }
+   }
+  },
+  "button": {
+   "neue_packung": {
+    "name": "New pack opened"
+   }
+  }
+ },
+ "services": {
+  "neue_packung": {
+   "name": "New pack",
+   "description": "Resets opening date and stock.",
+   "fields": {
+    "anbruchdatum": {
+     "name": "Opening date",
+     "description": "Default: today"
+    },
+    "anzahl_packungen": {
+     "name": "Number of packs",
+     "description": "Stock = number × pack size"
+    }
+   }
+  }
+ }
+}

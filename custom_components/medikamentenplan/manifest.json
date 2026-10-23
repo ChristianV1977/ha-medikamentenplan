@@ -1,0 +1,11 @@
+{
+  "domain": "medikamentenplan",
+  "name": "Medikamentenplan",
+  "codeowners": [],
+  "config_flow": true,
+  "documentation": "https://git.v-c-r.de/claude-projects/ha-medikamentenplan",
+  "integration_type": "service",
+  "iot_class": "calculated",
+  "issue_tracker": "https://git.v-c-r.de/claude-projects/ha-medikamentenplan/-/issues",
+  "version": "1.0.0"
+}

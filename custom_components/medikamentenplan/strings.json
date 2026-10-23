@@ -1,0 +1,165 @@
+{
+ "config": {
+  "step": {
+   "user": {
+    "title": "Neuer Medikamentenplan",
+    "description": "Name der Person oder des Plans (frei wählbar, z. B. „Gabi“).",
+    "data": {
+     "name": "Name"
+    }
+   }
+  },
+  "abort": {
+   "already_configured": "Diesen Plan gibt es schon."
+  }
+ },
+ "options": {
+  "step": {
+   "init": {
+    "title": "Medikamentenplan",
+    "menu_options": {
+     "add": "Medikament hinzufügen",
+     "catalog": "Aus Katalog übernehmen",
+     "edit": "Medikament bearbeiten",
+     "delete": "Medikament löschen"
+    }
+   },
+   "add": {
+    "title": "Medikament hinzufügen",
+    "data": {
+     "name": "Name",
+     "hersteller": "Hersteller",
+     "wirkstoff": "Wirkstoff / Stärke (z. B. Ibuprofen 400 mg)",
+     "darreichungsform": "Darreichungsform",
+     "dosis": "Dosis je Einnahme",
+     "einheit": "Einheit",
+     "modus": "Einnahmerhythmus",
+     "pro_tag": "Einnahmen pro Tag (bei „täglich“)",
+     "intervall_tage": "Alle N Tage (bei „Intervall“)",
+     "bedarf_pro_woche": "Einnahmen pro Woche (bei „bei Bedarf“, geschätzt)",
+     "packungsgroesse": "Packungsgröße (Einheiten pro Packung)",
+     "verordnet": "Verschreibungs-/Kaufdatum",
+     "anbruch": "Anbruchdatum der aktuellen Packung",
+     "restbestand": "Restbestand bei Anbruch (leer = Packungsgröße)",
+     "zweck": "Wofür",
+     "rezeptpflichtig": "Rezeptpflichtig",
+     "vorlauf_tage": "Vorlauf Nachbestellen (Tage)",
+     "notiz": "Notiz"
+    }
+   },
+   "edit_form": {
+    "title": "Medikament bearbeiten",
+    "data": {
+     "name": "Name",
+     "hersteller": "Hersteller",
+     "wirkstoff": "Wirkstoff / Stärke (z. B. Ibuprofen 400 mg)",
+     "darreichungsform": "Darreichungsform",
+     "dosis": "Dosis je Einnahme",
+     "einheit": "Einheit",
+     "modus": "Einnahmerhythmus",
+     "pro_tag": "Einnahmen pro Tag (bei „täglich“)",
+     "intervall_tage": "Alle N Tage (bei „Intervall“)",
+     "bedarf_pro_woche": "Einnahmen pro Woche (bei „bei Bedarf“, geschätzt)",
+     "packungsgroesse": "Packungsgröße (Einheiten pro Packung)",
+     "verordnet": "Verschreibungs-/Kaufdatum",
+     "anbruch": "Anbruchdatum der aktuellen Packung",
+     "restbestand": "Restbestand bei Anbruch (leer = Packungsgröße)",
+     "zweck": "Wofür",
+     "rezeptpflichtig": "Rezeptpflichtig",
+     "vorlauf_tage": "Vorlauf Nachbestellen (Tage)",
+     "notiz": "Notiz"
+    }
+   },
+   "catalog": {
+    "title": "Aus Katalog übernehmen",
+    "description": "Vorlage aus bereits angelegten Medikamenten (alle Pläne); Datum und Bestand trägst du neu ein.",
+    "data": {
+     "vorlage": "Vorlage"
+    }
+   },
+   "edit": {
+    "title": "Welches Medikament?",
+    "data": {
+     "medikament": "Medikament"
+    }
+   },
+   "delete": {
+    "title": "Medikament löschen",
+    "data": {
+     "medikament": "Medikament",
+     "bestaetigen": "Wirklich löschen"
+    }
+   }
+  },
+  "error": {
+   "pflicht": "Bitte einen Wert größer 0 eintragen."
+  },
+  "abort": {
+   "katalog_leer": "Der Katalog ist noch leer.",
+   "keine_medikamente": "Dieser Plan enthält noch keine Medikamente."
+  }
+ },
+ "selector": {
+  "darreichungsform": {
+   "options": {
+    "tablette": "Tablette",
+    "kapsel": "Kapsel",
+    "tropfen": "Tropfen",
+    "saft": "Saft",
+    "spray": "Spray",
+    "salbe": "Salbe/Creme",
+    "pflaster": "Pflaster",
+    "zaepfchen": "Zäpfchen",
+    "spritze": "Spritze/Pen",
+    "pulver": "Pulver",
+    "sonstige": "Sonstige"
+   }
+  },
+  "modus": {
+   "options": {
+    "taeglich": "Täglich (n-mal pro Tag)",
+    "intervall": "Alle N Tage (z. B. wöchentlich)",
+    "bedarf": "Bei Bedarf"
+   }
+  }
+ },
+ "entity": {
+  "sensor": {
+   "reichweite": {
+    "name": "Reichweite (Tage verbleibend)"
+   },
+   "nachbestelldatum": {
+    "name": "Nachbestelldatum"
+   },
+   "status": {
+    "name": "Status",
+    "state": {
+     "ok": "OK",
+     "nachbestellen": "Bald nachbestellen",
+     "aufgebraucht": "Aufgebraucht"
+    }
+   }
+  },
+  "button": {
+   "neue_packung": {
+    "name": "Neue Packung angefangen"
+   }
+  }
+ },
+ "services": {
+  "neue_packung": {
+   "name": "Neue Packung",
+   "description": "Setzt Anbruchdatum und Bestand neu.",
+   "fields": {
+    "anbruchdatum": {
+     "name": "Anbruchdatum",
+     "description": "Standard: heute"
+    },
+    "anzahl_packungen": {
+     "name": "Anzahl Packungen",
+     "description": "Bestand = Anzahl × Packungsgröße"
+    }
+   }
+  }
+ }
+}
