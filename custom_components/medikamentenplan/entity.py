@@ -21,8 +21,8 @@ class MedEntity(Entity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{plan.entry.entry_id}_{med_id}")},
             name=plan.device_name(med_id),
-            manufacturer=plan.meds[med_id].get("hersteller") or None,
-            via_device=(DOMAIN, plan.entry.entry_id),
+            manufacturer="Medikamentenplan",  # bewusst kein Hersteller/Medikamentendetails im Geraeteregister
+            via_device_id=plan.parent_device_id,
         )
 
     async def async_added_to_hass(self) -> None:

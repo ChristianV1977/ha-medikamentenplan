@@ -15,6 +15,7 @@ from .const import DOMAIN, SIGNAL_NEW, SIGNAL_UPDATE, STORAGE_VERSION
 
 class Plan:
     def __init__(self, hass: HomeAssistant, entry) -> None:
+        self.parent_device_id: str | None = None
         self.hass = hass
         self.entry = entry
         self.store = Store(hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}")
@@ -48,7 +49,7 @@ class Plan:
     async def async_update(self, med_id: str, med: dict) -> None:
         self.meds[med_id] = med
         await self._save()
-        dev = dr.async_get(self.hass).async_get_device({(DOMAIN, f"{self.entry.entry_id}_{med_id}")})
+        dev = dr.async_get(self.hass).async_get_device_by_identifier((DOMAIN, f"{self.entry.entry_id}_{med_id}"), self.entry.entry_id)
         if dev:
             dr.async_get(self.hass).async_update_device(dev.id, name=self.device_name(med_id))
         self.notify()
@@ -57,7 +58,7 @@ class Plan:
         self.meds.pop(med_id, None)
         await self._save()
         reg = dr.async_get(self.hass)
-        if dev := reg.async_get_device({(DOMAIN, f"{self.entry.entry_id}_{med_id}")}):
+        if dev := reg.async_get_device_by_identifier((DOMAIN, f"{self.entry.entry_id}_{med_id}"), self.entry.entry_id):
             reg.async_remove_device(dev.id)
 
     async def async_new_pack(self, med_id: str, start=None, packs: int = 1) -> None:

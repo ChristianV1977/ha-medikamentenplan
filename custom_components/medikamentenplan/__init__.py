@@ -13,12 +13,13 @@ async def async_setup_entry(hass: HomeAssistant, entry) -> bool:
     plan = Plan(hass, entry)
     await plan.async_load()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = plan
-    dr.async_get(hass).async_get_or_create(
+    parent = dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.entry_id)},
         name=f"Medikamentenplan {entry.title}",
         manufacturer="Medikamentenplan",
     )
+    plan.parent_device_id = parent.id
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     # taeglich neu berechnen (Mitternacht); beim Start rechnen die Entities ohnehin frisch
     entry.async_on_unload(async_track_time_change(hass, lambda _now: plan.notify(), hour=0, minute=0, second=5))
