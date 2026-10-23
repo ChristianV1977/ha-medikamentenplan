@@ -35,7 +35,8 @@ class Plan:
         return calc.compute(self.meds[med_id], dt_util.now().date())
 
     def device_name(self, med_id: str) -> str:
-        return f"{self.meds[med_id]['name']} ({self.name})"
+        # Praefix "Medikament" -> entity_ids sensor.medikament_*, gezielt aus Recorder/InfluxDB ausschliessbar
+        return f"Medikament {self.meds[med_id]['name']} ({self.name})"
 
     async def async_add(self, med: dict) -> str:
         med_id = uuid.uuid4().hex[:12]  # stabile Unique-ID-Basis

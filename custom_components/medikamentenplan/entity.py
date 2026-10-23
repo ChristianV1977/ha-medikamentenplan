@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -28,6 +29,7 @@ class MedEntity(Entity):
         self.async_on_remove(async_dispatcher_connect(
             self.hass, SIGNAL_UPDATE.format(self.plan.entry.entry_id), self._refresh))
 
+    @callback
     def _refresh(self) -> None:
         if self.med_id in self.plan.meds:
             self.async_write_ha_state()
