@@ -56,3 +56,23 @@ def test_schema():
 def test_old_entries_without_schema():
     assert calc.daily_use({**BASE, "dosis": 2, "pro_tag": 3}) == 6 and calc.schema_text(BASE) == ""
     assert calc.fmt_num(1.0) == "1" and calc.fmt_num(0.5) == "0,5"
+
+
+def test_new_pack_changes():
+    m = calc.new_pack({**BASE, "hersteller": "A"}, T, packs=2, hersteller="B", packungsgroesse=30)
+    assert m["hersteller"] == "B" and m["packungsgroesse"] == 30 and m["restbestand"] == 60
+    assert calc.new_pack({**BASE, "hersteller": "A"}, T, hersteller="")["anbruch"] == "2026-10-23"
+    assert "hersteller" not in calc.new_pack({**BASE, "hersteller": "A"}, T, hersteller="  ")
+    u = calc.new_pack({**BASE, "hersteller": "A"}, T)  # None = unveraendert
+    assert u["hersteller"] == "A" and u["packungsgroesse"] == 20 and u["restbestand"] == 20
+
+
+def test_stopped():
+    s = calc.set_stopped({**BASE, "restbestand": 5}, True, today=T)
+    assert s["abgesetzt"] is True and s["abgesetzt_am"] == "2026-10-23"
+    c = calc.compute(s, T)
+    assert c["status"] == "abgesetzt" and c["verbleibende_tage"] is None and c["nachbestelldatum"] is None
+    assert calc.set_stopped(s, True, date(2026, 10, 1))["abgesetzt_am"] == "2026-10-01"
+    r = calc.set_stopped(s, False)
+    assert "abgesetzt" not in r and "abgesetzt_am" not in r
+    assert calc.compute(r, T)["status"] == "nachbestellen"  # 5 Stueck Rest, Ampel wieder aktiv

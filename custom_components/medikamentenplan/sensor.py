@@ -26,14 +26,16 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     entity_platform.async_get_current_platform().async_register_entity_service(
         "neue_packung",
-        {vol.Optional("anbruchdatum"): cv.date, vol.Optional("anzahl_packungen", default=1): vol.All(vol.Coerce(int), vol.Range(min=1))},
+        {vol.Optional("anbruchdatum"): cv.date, vol.Optional("anzahl_packungen", default=1): vol.All(vol.Coerce(int), vol.Range(min=1)),
+         vol.Optional("hersteller"): cv.string,
+         vol.Optional("packungsgroesse"): vol.All(vol.Coerce(float), vol.Range(min=0.01))},
         "async_neue_packung",
     )
 
 
 # Allowlist: Wirkstoff, Hersteller, Notiz, Verschreibungsdatum bleiben bewusst draussen (nur im Options-Flow sichtbar)
 ATTR_KEYS = ("name", "zweck", "dosis", "einheit", "modus", "morgens", "mittags", "abends", "nachts", "pro_tag", "intervall_tage", "bedarf_pro_woche",
-             "packungsgroesse", "anbruch", "restbestand", "rezeptpflichtig", "vorlauf_tage")
+             "packungsgroesse", "anbruch", "restbestand", "rezeptpflichtig", "vorlauf_tage", "abgesetzt", "abgesetzt_am")
 COMPUTED_KEYS = ("tagesverbrauch", "einnahmeschema", "reichweite_tage", "aufbrauchdatum", "nachbestelldatum", "verbleibende_tage", "status")
 
 
@@ -57,8 +59,8 @@ class Reichweite(MedEntity, SensorEntity):
         attrs = {"plan": self.plan.name, **{k: med[k] for k in ATTR_KEYS if k in med}, **c}
         return {k: (v.isoformat() if hasattr(v, "isoformat") else v) for k, v in attrs.items()}
 
-    async def async_neue_packung(self, anbruchdatum=None, anzahl_packungen=1):
-        await self.plan.async_new_pack(self.med_id, anbruchdatum, anzahl_packungen)
+    async def async_neue_packung(self, anbruchdatum=None, anzahl_packungen=1, hersteller=None, packungsgroesse=None):
+        await self.plan.async_new_pack(self.med_id, anbruchdatum, anzahl_packungen, hersteller, packungsgroesse)
 
 
 class Nachbestelldatum(MedEntity, SensorEntity):
@@ -74,7 +76,7 @@ class Nachbestelldatum(MedEntity, SensorEntity):
 
 class Status(MedEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.ENUM
-    _attr_options = ["ok", "nachbestellen", "aufgebraucht"]
+    _attr_options = ["ok", "nachbestellen", "aufgebraucht", "abgesetzt"]
 
     def __init__(self, plan, med_id):
         super().__init__(plan, med_id, "status")

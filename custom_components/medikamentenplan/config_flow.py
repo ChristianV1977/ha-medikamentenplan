@@ -50,6 +50,8 @@ def med_schema(hersteller_liste=()) -> vol.Schema:
         vol.Required("rezeptpflichtig", default=False): bool,
         vol.Required("vorlauf_tage", default=7): _num(min=0),
         vol.Optional("notiz"): sel.TextSelector(sel.TextSelectorConfig(multiline=True)),
+        vol.Optional("abgesetzt", default=False): bool,
+        vol.Optional("abgesetzt_am"): sel.DateSelector(),
     })
 
 
@@ -59,6 +61,10 @@ def _clean(inp: dict) -> dict:
     for k in ("morgens", "mittags", "abends", "nachts"):
         if not float(med.get(k, 0) or 0):
             med.pop(k, None)  # 0/leer = nicht gesetzt (Migration: alte Eintraege ohne Schema bleiben gueltig)
+    if med.get("abgesetzt"):
+        med = calc.set_stopped(med, True, calc.parse_date(med.get("abgesetzt_am")), dt_util.now().date())
+    else:
+        med = calc.set_stopped(med, False)
     for k in ("intervall_tage", "vorlauf_tage"):
         if k in med:
             med[k] = int(med[k])
@@ -95,10 +101,10 @@ class MedOptionsFlow(OptionsFlow):
     async def async_step_init(self, user_input=None):
         self._hersteller = await self.hass.async_add_executor_job(hersteller)
         await self.hass.async_add_executor_job(startliste)
-        return self.async_show_menu(step_id="init", menu_options=["add", "startliste", "catalog", "edit", "delete"])
+        return self.async_show_menu(step_id="init", menu_options=["add", "startliste", "catalog", "neue_packung", "edit", "absetzen", "delete"])
 
     def _med_options(self, plans=None) -> dict[str, str]:
-        return {mid: m["name"] for mid, m in self.plan.meds.items()}
+        return {mid: m["name"] + (" (abgesetzt)" if m.get("abgesetzt") else "") for mid, m in self.plan.meds.items()}
 
     async def _form(self, step, errors=None):
         schema = self.add_suggested_values_to_schema(med_schema(self._hersteller), self._prefill)
@@ -195,6 +201,52 @@ class MedOptionsFlow(OptionsFlow):
         await self.plan.async_update(self._med_id, med)
         return self.async_create_entry(data={})
 
+    # --- neue Packung mit Rueckfrage (Hersteller/Groesse vorbelegt) ---
+    async def async_step_neue_packung(self, user_input=None):
+        if user_input is not None:
+            self._med_id = user_input["medikament"]
+            return await self.async_step_neue_packung_form()
+        return self._pick("neue_packung", active_only=True)
+
+    async def async_step_neue_packung_form(self, user_input=None):
+        med = self.plan.meds[self._med_id]
+        if user_input is not None:
+            await self.plan.async_new_pack(
+                self._med_id, calc.parse_date(user_input["anbruch"]), int(user_input["anzahl_packungen"]),
+                user_input.get("hersteller", ""), float(user_input["packungsgroesse"]))
+            return self.async_create_entry(data={})
+        schema = vol.Schema({
+            vol.Optional("hersteller"): _combo(self._hersteller),
+            vol.Required("packungsgroesse"): _num(min=0.01),
+            vol.Required("anzahl_packungen", default=1): _num(min=1, max=20),
+            vol.Required("anbruch"): sel.DateSelector(),
+        })
+        sug = {"hersteller": med.get("hersteller", ""), "packungsgroesse": med.get("packungsgroesse"),
+               "anbruch": dt_util.now().date().isoformat()}
+        return self.async_show_form(step_id="neue_packung_form",
+            data_schema=self.add_suggested_values_to_schema(schema, sug),
+            description_placeholders={"name": med["name"]})
+
+    # --- absetzen / reaktivieren ---
+    async def async_step_absetzen(self, user_input=None):
+        if user_input is not None:
+            self._med_id = user_input["medikament"]
+            return await self.async_step_absetzen_form()
+        return self._pick("absetzen")
+
+    async def async_step_absetzen_form(self, user_input=None):
+        med = self.plan.meds[self._med_id]
+        if user_input is not None:
+            since = calc.parse_date(user_input.get("abgesetzt_am"))
+            await self.plan.async_update(self._med_id, calc.set_stopped(
+                med, user_input["abgesetzt"], since, dt_util.now().date()))
+            return self.async_create_entry(data={})
+        schema = vol.Schema({vol.Required("abgesetzt"): bool, vol.Optional("abgesetzt_am"): sel.DateSelector()})
+        sug = {"abgesetzt": bool(med.get("abgesetzt")), "abgesetzt_am": med.get("abgesetzt_am") or dt_util.now().date().isoformat()}
+        return self.async_show_form(step_id="absetzen_form",
+            data_schema=self.add_suggested_values_to_schema(schema, sug),
+            description_placeholders={"name": med["name"]})
+
     # --- loeschen ---
     async def async_step_delete(self, user_input=None):
         if user_input is not None:
@@ -203,8 +255,8 @@ class MedOptionsFlow(OptionsFlow):
             return self.async_create_entry(data={})
         return self._pick("delete", confirm=True)
 
-    def _pick(self, step, confirm=False):
-        opts = self._med_options()
+    def _pick(self, step, confirm=False, active_only=False):
+        opts = {k: v for k, v in self._med_options().items() if not (active_only and self.plan.meds[k].get("abgesetzt"))}
         if not opts:
             return self.async_abort(reason="keine_medikamente")
         schema = {vol.Required("medikament"): sel.SelectSelector(sel.SelectSelectorConfig(

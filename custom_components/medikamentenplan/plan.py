@@ -4,6 +4,7 @@ from __future__ import annotations
 import uuid
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
@@ -61,9 +62,11 @@ class Plan:
         if dev := reg.async_get_device_by_identifier((DOMAIN, f"{self.entry.entry_id}_{med_id}"), self.entry.entry_id):
             reg.async_remove_device(dev.id)
 
-    async def async_new_pack(self, med_id: str, start=None, packs: int = 1) -> None:
+    async def async_new_pack(self, med_id: str, start=None, packs: int = 1, hersteller=None, packungsgroesse=None) -> None:
+        if self.meds[med_id].get("abgesetzt"):
+            raise ServiceValidationError("Medikament ist abgesetzt - zuerst reaktivieren.")
         start = start or dt_util.now().date()
-        await self.async_update(med_id, calc.new_pack(self.meds[med_id], start, packs))
+        await self.async_update(med_id, calc.new_pack(self.meds[med_id], start, packs, hersteller, packungsgroesse))
 
     def notify(self) -> None:
         async_dispatcher_send(self.hass, SIGNAL_UPDATE.format(self.entry.entry_id))

@@ -22,7 +22,9 @@
      "catalog": "Aus Katalog übernehmen",
      "edit": "Medikament bearbeiten",
      "delete": "Medikament löschen",
-     "startliste": "Aus Startliste wählen"
+     "startliste": "Aus Startliste wählen",
+     "neue_packung": "Neue Packung angefangen",
+     "absetzen": "Absetzen / Reaktivieren"
     }
    },
    "add": {
@@ -49,7 +51,9 @@
      "zweck": "Wofür",
      "rezeptpflichtig": "Rezeptpflichtig",
      "vorlauf_tage": "Vorlauf Nachbestellen (Tage)",
-     "notiz": "Notiz"
+     "notiz": "Notiz",
+     "abgesetzt": "Abgesetzt",
+     "abgesetzt_am": "Abgesetzt am (leer = heute)"
     },
     "description": "Optional: Tageszeit-Schema (morgens/mittags/abends/nachts). Ist es gesetzt, ersetzt die Summe Dosis × Einnahmen pro Tag; bei „Alle N Tage“ = Menge am Einnahmetag; bei „Bei Bedarf“ ohne Wirkung."
    },
@@ -77,7 +81,9 @@
      "zweck": "Wofür",
      "rezeptpflichtig": "Rezeptpflichtig",
      "vorlauf_tage": "Vorlauf Nachbestellen (Tage)",
-     "notiz": "Notiz"
+     "notiz": "Notiz",
+     "abgesetzt": "Abgesetzt",
+     "abgesetzt_am": "Abgesetzt am (leer = heute)"
     },
     "description": "Optional: Tageszeit-Schema (morgens/mittags/abends/nachts). Ist es gesetzt, ersetzt die Summe Dosis × Einnahmen pro Tag; bei „Alle N Tage“ = Menge am Einnahmetag; bei „Bei Bedarf“ ohne Wirkung."
    },
@@ -115,6 +121,36 @@
      "staerke": "Stärke",
      "packungsgroesse": "Packungsgröße (Einheiten)",
      "hersteller": "Hersteller"
+    }
+   },
+   "neue_packung": {
+    "title": "Neue Packung – welches Medikament?",
+    "data": {
+     "medikament": "Medikament"
+    }
+   },
+   "neue_packung_form": {
+    "title": "Neue Packung: {name}",
+    "description": "Hat sich der Hersteller oder die Packungsgröße geändert? Die bisherigen Werte sind vorbelegt, bei Änderung einfach überschreiben. Bestätigen setzt Anbruch und Bestand neu.",
+    "data": {
+     "hersteller": "Hersteller",
+     "packungsgroesse": "Packungsgröße (Einheiten pro Packung)",
+     "anzahl_packungen": "Anzahl Packungen",
+     "anbruch": "Anbruchdatum"
+    }
+   },
+   "absetzen": {
+    "title": "Absetzen / Reaktivieren – welches Medikament?",
+    "data": {
+     "medikament": "Medikament"
+    }
+   },
+   "absetzen_form": {
+    "title": "{name}",
+    "description": "Abgesetzte Medikamente haben keine Nachbestell-Ampel und erscheinen nicht im Einnahmeplan. Häkchen entfernen = reaktivieren.",
+    "data": {
+     "abgesetzt": "Abgesetzt",
+     "abgesetzt_am": "Abgesetzt am"
     }
    }
   },
@@ -177,7 +213,8 @@
     "state": {
      "ok": "OK",
      "nachbestellen": "Bald nachbestellen",
-     "aufgebraucht": "Aufgebraucht"
+     "aufgebraucht": "Aufgebraucht",
+     "abgesetzt": "Abgesetzt"
     }
    }
   },
@@ -190,7 +227,7 @@
  "services": {
   "neue_packung": {
    "name": "Neue Packung",
-   "description": "Setzt Anbruchdatum und Bestand neu.",
+   "description": "Setzt Anbruchdatum und Bestand neu; Hersteller/Packungsgröße optional ändern.",
    "fields": {
     "anbruchdatum": {
      "name": "Anbruchdatum",
@@ -199,6 +236,14 @@
     "anzahl_packungen": {
      "name": "Anzahl Packungen",
      "description": "Bestand = Anzahl × Packungsgröße"
+    },
+    "hersteller": {
+     "name": "Hersteller",
+     "description": "Leer lassen = unverändert"
+    },
+    "packungsgroesse": {
+     "name": "Packungsgröße",
+     "description": "Leer lassen = unverändert"
     }
    }
   }

@@ -16,3 +16,15 @@ neue_packung:
           min: 1
           max: 20
           mode: box
+    hersteller:
+      required: false
+      selector:
+        text:
+    packungsgroesse:
+      required: false
+      selector:
+        number:
+          min: 0.01
+          max: 10000
+          step: any
+          mode: box

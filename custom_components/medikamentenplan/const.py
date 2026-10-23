@@ -9,4 +9,4 @@ MODES = ["taeglich", "intervall", "bedarf"]
 # Felder, die beim "aus Katalog uebernehmen" mitkommen (keine Daten/Bestand)
 CATALOG_FIELDS = ["name", "hersteller", "wirkstoff", "darreichungsform", "dosis", "einheit", "modus",
                   "morgens", "mittags", "abends", "nachts", "pro_tag", "intervall_tage", "bedarf_pro_woche", "packungsgroesse", "zweck",
-                  "rezeptpflichtig", "vorlauf_tage", "notiz"]
+                  "rezeptpflichtig", "vorlauf_tage", "notiz"]  # bewusst ohne abgesetzt/anbruch/restbestand

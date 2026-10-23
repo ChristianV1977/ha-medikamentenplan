@@ -10,6 +10,7 @@ MODE_PRN = "bedarf"
 STATUS_OK = "ok"
 STATUS_REORDER = "nachbestellen"
 STATUS_EMPTY = "aufgebraucht"
+STATUS_STOPPED = "abgesetzt"
 
 
 def parse_date(value) -> date | None:
@@ -74,6 +75,9 @@ def compute(med: dict, today: date) -> dict:
         "verbleibende_tage": None,
         "status": STATUS_OK,
     }
+    if med.get("abgesetzt"):  # keine Reichweite/Ampel, kein Nachbestelldatum
+        out.update(einnahmeschema="", status=STATUS_STOPPED)
+        return out
     if use <= 0:
         return out
     start = parse_date(med.get("anbruch")) or today
@@ -93,9 +97,30 @@ def compute(med: dict, today: date) -> dict:
     return out
 
 
-def new_pack(med: dict, start: date, packs: int = 1) -> dict:
-    """Neue Packung angefangen: Anbruch = start, Bestand = Packungen x Packungsgroesse."""
+def new_pack(med: dict, start: date, packs: int = 1, hersteller: str | None = None,
+             packungsgroesse: float | None = None) -> dict:
+    """Neue Packung angefangen: Anbruch = start, Bestand = Packungen x Packungsgroesse.
+    hersteller/packungsgroesse None = unveraendert; hersteller "" = Angabe entfernen."""
     med = dict(med)
+    if hersteller is not None:
+        if hersteller.strip():
+            med["hersteller"] = hersteller.strip()
+        else:
+            med.pop("hersteller", None)
+    if packungsgroesse is not None:
+        med["packungsgroesse"] = float(packungsgroesse)
     med["anbruch"] = start.isoformat()
     med["restbestand"] = float(med.get("packungsgroesse", 0)) * max(1, int(packs))
+    return med
+
+
+def set_stopped(med: dict, stopped: bool, since: date | None = None, today: date | None = None) -> dict:
+    """Absetzen (Datum optional, Standard heute) bzw. Reaktivieren (Felder entfernen)."""
+    med = dict(med)
+    if stopped:
+        med["abgesetzt"] = True
+        med["abgesetzt_am"] = (since or today or date.today()).isoformat()
+    else:
+        med.pop("abgesetzt", None)
+        med.pop("abgesetzt_am", None)
     return med
