@@ -21,6 +21,10 @@ Service `medikamentenplan.neue_packung` (Ziel: Reichweite-Sensor): optional `anb
 
 Beispiel mit auto-entities (HACS) und Mushroom: Vorratskarten über `filter.include` (`integration: medikamentenplan`, `entity_id: sensor.*_reichweite_tage_verbleibend`), abgesetzte per `exclude` mit `attributes: {status: abgesetzt}` ausblenden. Für "Neue Packung" mit Rückfrage Tipp-Aktion `browser_mod.popup` mit den drei Feldern und dem Button verwenden. Für den Einnahmeplan stehen die Attribute `morgens`/`mittags`/`abends`/`nachts` am Reichweite-Sensor bereit.
 
+## Dashboard-Beispiel
+
+Fertige Ansicht (Vorratskarten nach Dringlichkeit, Popup mit Hersteller-Pulldown, Packungsgröße, Anzahl und Button "Neue Packung angefangen", Einnahmeplan-Tabelle): [`examples/dashboard-medikamente.yaml`](examples/dashboard-medikamente.yaml). Im Raw-Konfigurationseditor eines Dashboards einfügen und `PLANNAME` durch den Plan-Namen ersetzen. Für alle Pläne oder einen anderen Plan: `python3 tools/gen_dashboard.py [PLAN]`. Benötigt auto-entities, Mushroom und browser_mod (HACS).
+
 ## Datenschutz
 
 Medikamentendaten sind Gesundheitsdaten. Die Integration setzt alle Attribute auf `_unrecorded_attributes` (kein Verlauf im Recorder), das Geräteregister enthält keinen Hersteller oder Wirkstoff. **Empfohlen:** `sensor.medikament_*`, `button.medikament_*`, `select.medikament_*` und `number.medikament_*` zusätzlich aus Recorder, InfluxDB und Logbuch ausschließen und das Dashboard nur Admins zeigen. Beim Löschen eines Plans wird sein Store entfernt. Das Repo enthält keine echten Daten; die Startliste ist eine eigene Zusammenstellung allgemein bekannter Fakten (keine PZN, keine Preise), **Angaben ohne Gewähr, bitte mit der Packung abgleichen**. Die Integration ersetzt keinen Arzt und keine Apotheke.

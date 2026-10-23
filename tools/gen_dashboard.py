@@ -35,7 +35,8 @@ def popup():
 
 
 def vorrat():
-    rule = {"integration": "medikamentenplan", "entity_id": "sensor.*_reichweite_tage_verbleibend", "options": {
+    # kein "integration:"-Filter: braucht config/entity_registry/list (Admin-only), Nicht-Admins sahen sonst eine leere Karte
+    rule = {"entity_id": "sensor.medikament_*_reichweite_tage_verbleibend", "options": {
         "type": "custom:mushroom-template-card",
         "primary": "{{ state_attr('this.entity_id','name') }}",
         "secondary": "{% set a = states['this.entity_id'].attributes %}{{ a.plan }} · {% if is_number(states('this.entity_id')) %}{{ states('this.entity_id') | int }} Tage übrig{% else %}Reichweite unbekannt{% endif %}{% if a.nachbestelldatum %} · nachbestellen ab {{ (a.nachbestelldatum | as_datetime | as_local).strftime('%d.%m.%Y') }}{% endif %}",

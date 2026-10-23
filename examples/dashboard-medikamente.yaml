@@ -1,0 +1,175 @@
+# Beispiel-Dashboard Medikamentenplan (Raw-Konfigurationseditor). "PLANNAME" durch den Namen deines Plans ersetzen;
+# ohne Plan-Filter (alle Plaene) siehe tools/gen_dashboard.py. Benoetigt HACS: auto-entities, mushroom, browser_mod.
+views:
+- title: Medikamente
+  path: medikamente
+  icon: mdi:pill
+  type: sections
+  max_columns: 2
+  sections:
+  - type: grid
+    cards:
+    - type: heading
+      heading: Vorrat – dringendste zuerst · Tippen = Details/Neue Packung, Halten = more-info
+      icon: mdi:pill
+    - type: custom:auto-entities
+      show_empty: true
+      card:
+        type: grid
+        columns: 1
+        square: false
+      card_param: cards
+      filter:
+        include:
+        - entity_id: sensor.medikament_*_reichweite_tage_verbleibend
+          options:
+            type: custom:mushroom-template-card
+            primary: '{{ state_attr(''this.entity_id'',''name'') }}'
+            secondary: '{% set a = states[''this.entity_id''].attributes %}{{ a.plan }} · {% if is_number(states(''this.entity_id'')) %}{{ states(''this.entity_id'') | int }} Tage übrig{% else %}Reichweite
+              unbekannt{% endif %}{% if a.nachbestelldatum %} · nachbestellen ab {{ (a.nachbestelldatum | as_datetime | as_local).strftime(''%d.%m.%Y'') }}{% endif %}'
+            icon: '{{ {''ok'':''mdi:pill'',''nachbestellen'':''mdi:cart-arrow-down'',''aufgebraucht'':''mdi:pill-off''}.get(state_attr(''this.entity_id'',''status''),''mdi:help-circle'') }}'
+            icon_color: '{{ {''ok'':''green'',''nachbestellen'':''orange'',''aufgebraucht'':''red''}.get(state_attr(''this.entity_id'',''status''),''grey'') }}'
+            multiline_secondary: true
+            layout: horizontal
+            fill_container: true
+            tap_action:
+              action: fire-dom-event
+              browser_mod:
+                service: browser_mod.popup
+                data:
+                  dismissable: true
+                  content:
+                    type: vertical-stack
+                    cards:
+                    - type: markdown
+                      content: '### {{ state_attr(''this.entity_id'',''name'') }}'
+                    - type: custom:auto-entities
+                      show_empty: false
+                      card:
+                        type: entities
+                        show_header_toggle: false
+                      filter:
+                        include:
+                        - entity_id: select.*_hersteller
+                          attributes:
+                            reichweite_entity: this.entity_id
+                          options:
+                            name: Hersteller
+                        - entity_id: number.*_packungsgrosse
+                          attributes:
+                            reichweite_entity: this.entity_id
+                          options:
+                            name: Packungsgröße
+                        - entity_id: number.*_anzahl_packungen
+                          attributes:
+                            reichweite_entity: this.entity_id
+                          options:
+                            name: Anzahl Packungen
+                    - type: custom:auto-entities
+                      show_empty: false
+                      card_param: cards
+                      card:
+                        type: grid
+                        columns: 1
+                        square: false
+                      filter:
+                        include:
+                        - entity_id: button.*_neue_packung_angefangen
+                          attributes:
+                            reichweite_entity: this.entity_id
+                          options:
+                            type: button
+                            name: Neue Packung angefangen
+                            icon: mdi:package-variant-closed-plus
+                            show_state: false
+                            icon_height: 36px
+                            tap_action:
+                              action: perform-action
+                              perform_action: button.press
+                              target:
+                                entity_id: this.entity_id
+                              confirmation:
+                                text: Neue Packung jetzt anbrechen? Anbruch = heute, Bestand = Packungsgröße × Anzahl.
+            hold_action:
+              action: more-info
+          attributes:
+            plan: PLANNAME
+        exclude:
+        - attributes:
+            status: abgesetzt
+      else:
+        type: markdown
+        content: Noch keine Medikamente angelegt (Einstellungen > Geräte & Dienste > Medikamentenplan).
+      sort:
+        method: state
+        numeric: true
+  - type: grid
+    cards:
+    - type: markdown
+      title: Einnahmeplan
+      content: '{%- macro f(x) -%}{%- set r = x | float(0) -%}{%- if r == 0 -%}–{%- elif r == r | int -%}{{ r | int }}{%- else -%}{{ r | string | replace(''.'', '','') }}{%- endif -%}{%- endmacro -%}
+
+        {%- set ns0 = namespace(l=[]) -%}{%- for e in integration_entities(''medikamentenplan'') | select(''match'', ''sensor\..*_reichweite_tage_verbleibend$'') if state_attr(e, ''status'') != ''abgesetzt''
+        and state_attr(e, ''plan'') == ''PLANNAME'' -%}{%- set ns0.l = ns0.l + [e] -%}{%- endfor -%}{%- set ents = ns0.l -%}
+
+        {%- for p in ents | map(''state_attr'', ''plan'') | unique | sort %}
+
+        ### {{ p }}
+
+        | Medikament | Morgens | Mittags | Abends | Nachts |
+
+        |:--|:-:|:-:|:-:|:-:|
+
+        {%- set ns = namespace(rows=[], bed=[]) %}
+
+        {%- for e in ents if state_attr(e, ''plan'') == p %}
+
+        {%- set a = states[e].attributes %}
+
+        {%- set v = [a.get(''morgens'', 0), a.get(''mittags'', 0), a.get(''abends'', 0), a.get(''nachts'', 0)] | map(''float'', 0) | list %}
+
+        {%- if a.modus == ''bedarf'' %}
+
+        {%- set ns.bed = ns.bed + [a.name ~ '' (ca. '' ~ (f(a.bedarf_pro_woche) | trim) ~ ''× pro Woche)''] %}
+
+        {%- else %}
+
+        {%- set first = (v | map(''bool'') | list).index(true) if true in (v | map(''bool'') | list) else 9 %}
+
+        {%- set lbl = a.name ~ ('' (alle '' ~ a.intervall_tage ~ '' Tage)'' if a.modus not in [''taeglich'', ''bedarf''] and a.intervall_tage else '''') %}
+
+        {%- set ns.rows = ns.rows + [first ~ ''@@'' ~ lbl ~ ''@@'' ~ (f(v[0]) | trim) ~ ''@@'' ~ (f(v[1]) | trim) ~ ''@@'' ~ (f(v[2]) | trim) ~ ''@@'' ~ (f(v[3]) | trim)] %}
+
+        {%- endif %}
+
+        {%- endfor %}
+
+        {%- for r in ns.rows | sort %}
+
+        {%- set c = r.split(''@@'') %}
+
+        | {{ c[1] }} | {{ c[2] }} | {{ c[3] }} | {{ c[4] }} | {{ c[5] }} |
+
+        {%- endfor %}
+
+        {%- if ns.bed %}
+
+
+        *Bei Bedarf: {{ ns.bed | sort | join(''; '') }}*
+
+        {%- endif %}
+
+        {% endfor -%}'
+    - type: markdown
+      content: '{%- set ns = namespace(r=[]) -%}{%- for e in integration_entities(''medikamentenplan'') | select(''match'', ''sensor\..*_reichweite_tage_verbleibend$'') if state_attr(e, ''status'') == ''abgesetzt''
+        and state_attr(e, ''plan'') == ''PLANNAME'' -%}{%- set a = states[e].attributes -%}{%- set d = (a.abgesetzt_am | as_datetime | as_local).strftime(''%d.%m.%Y'') if a.abgesetzt_am else ''–'' -%}{%-
+        set ns.r = ns.r + [''- '' ~ a.name ~ '' ('' ~ a.plan ~ '') · abgesetzt am '' ~ d] -%}{%- endfor -%}
+
+        <details><summary><b>Abgesetzt ({{ ns.r | length }})</b></summary>
+
+
+        {{ ns.r | sort | join(''\n'') if ns.r else ''Keine abgesetzten Medikamente.'' }}
+
+
+        </details>'
+
