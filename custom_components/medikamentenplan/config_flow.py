@@ -7,6 +7,7 @@ from homeassistant.helpers import selector as sel
 from homeassistant.util import dt as dt_util
 from homeassistant.util import slugify
 
+from . import calc
 from .catalog import fmt, hersteller, startliste
 from .const import CATALOG_FIELDS, DOMAIN, FORMS, MODES
 
@@ -34,6 +35,10 @@ def med_schema(hersteller_liste=()) -> vol.Schema:
         vol.Required("dosis", default=1): _num(min=0.01),
         vol.Required("einheit", default="Stück"): str,
         vol.Required("modus", default="taeglich"): _select(MODES, "modus"),
+        vol.Optional("morgens"): _num(min=0),
+        vol.Optional("mittags"): _num(min=0),
+        vol.Optional("abends"): _num(min=0),
+        vol.Optional("nachts"): _num(min=0),
         vol.Optional("pro_tag", default=1): _num(min=0),
         vol.Optional("intervall_tage", default=7): _num(min=1),
         vol.Optional("bedarf_pro_woche", default=0): _num(min=0),
@@ -51,6 +56,9 @@ def med_schema(hersteller_liste=()) -> vol.Schema:
 def _clean(inp: dict) -> dict:
     """Leere Optionalfelder entfernen, Zahlen normalisieren."""
     med = {k: v for k, v in inp.items() if v not in (None, "")}
+    for k in ("morgens", "mittags", "abends", "nachts"):
+        if not float(med.get(k, 0) or 0):
+            med.pop(k, None)  # 0/leer = nicht gesetzt (Migration: alte Eintraege ohne Schema bleiben gueltig)
     for k in ("intervall_tage", "vorlauf_tage"):
         if k in med:
             med[k] = int(med[k])
@@ -98,7 +106,7 @@ class MedOptionsFlow(OptionsFlow):
 
     def _validate(self, med):
         mode = med["modus"]
-        if mode == "taeglich" and not med.get("pro_tag"):
+        if mode == "taeglich" and not med.get("pro_tag") and not calc.schema_sum(med):
             return {"pro_tag": "pflicht"}
         if mode == "bedarf" and not med.get("bedarf_pro_woche"):
             return {"bedarf_pro_woche": "pflicht"}

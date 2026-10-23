@@ -20,10 +20,34 @@ def parse_date(value) -> date | None:
     return date.fromisoformat(str(value)[:10])
 
 
+SCHEMA_KEYS = ("morgens", "mittags", "abends", "nachts")
+
+
+def schema_sum(med: dict) -> float:
+    return sum(float(med.get(k, 0) or 0) for k in SCHEMA_KEYS)
+
+
+def fmt_num(x) -> str:
+    """Deutsch formatiert: 0,5 statt 0.5, ganze Zahlen ohne Nachkomma."""
+    x = round(float(x), 2)
+    return str(int(x)) if x == int(x) else str(x).replace(".", ",")
+
+
+def schema_text(med: dict) -> str:
+    """Lesbar, z. B. 'morgens 0,5 · abends 1'; leer ohne Schema."""
+    return " · ".join(f"{k} {fmt_num(med[k])}" for k in SCHEMA_KEYS if float(med.get(k, 0) or 0) > 0)
+
+
 def daily_use(med: dict) -> float:
-    """Verbrauch pro Tag in Einheiten (Dosis x Einnahmen/Tag, / Intervall, / Bedarf pro Woche)."""
+    """Verbrauch pro Tag in Einheiten. Mit Tageszeit-Schema (Summe > 0) gilt dessen Summe statt Dosis x pro_tag;
+    bei Intervall ist das Schema die Menge am Einnahmetag; bei Bedarf wird es ignoriert."""
     dose = float(med.get("dosis", 0) or 0)
     mode = med.get("modus", MODE_DAILY)
+    sch = schema_sum(med)
+    if sch > 0 and mode == MODE_DAILY:
+        return sch
+    if sch > 0 and mode == MODE_INTERVAL:
+        return sch / max(1, int(med.get("intervall_tage", 1) or 1))
     if mode == MODE_INTERVAL:
         return dose / max(1, int(med.get("intervall_tage", 1) or 1))
     if mode == MODE_PRN:
@@ -43,6 +67,7 @@ def compute(med: dict, today: date) -> dict:
     use = daily_use(med)
     out = {
         "tagesverbrauch": round(use, 4),
+        "einnahmeschema": schema_text(med) if med.get("modus", MODE_DAILY) != MODE_PRN else "",
         "reichweite_tage": None,
         "aufbrauchdatum": None,
         "nachbestelldatum": None,

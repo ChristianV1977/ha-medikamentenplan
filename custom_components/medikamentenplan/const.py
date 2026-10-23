@@ -8,5 +8,5 @@ FORMS = ["tablette", "kapsel", "tropfen", "saft", "spray", "salbe", "pflaster", 
 MODES = ["taeglich", "intervall", "bedarf"]
 # Felder, die beim "aus Katalog uebernehmen" mitkommen (keine Daten/Bestand)
 CATALOG_FIELDS = ["name", "hersteller", "wirkstoff", "darreichungsform", "dosis", "einheit", "modus",
-                  "pro_tag", "intervall_tage", "bedarf_pro_woche", "packungsgroesse", "zweck",
+                  "morgens", "mittags", "abends", "nachts", "pro_tag", "intervall_tage", "bedarf_pro_woche", "packungsgroesse", "zweck",
                   "rezeptpflichtig", "vorlauf_tage", "notiz"]

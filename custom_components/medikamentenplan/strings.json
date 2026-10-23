@@ -35,7 +35,11 @@
      "dosis": "Dosis je Einnahme",
      "einheit": "Einheit",
      "modus": "Einnahmerhythmus",
-     "pro_tag": "Einnahmen pro Tag (bei „täglich“)",
+     "morgens": "Schema: morgens (Stück, z. B. 0,5)",
+     "mittags": "Schema: mittags (Stück)",
+     "abends": "Schema: abends (Stück)",
+     "nachts": "Schema: zur Nacht (Stück)",
+     "pro_tag": "Einnahmen pro Tag (bei „täglich“, ohne Schema)",
      "intervall_tage": "Alle N Tage (bei „Intervall“)",
      "bedarf_pro_woche": "Einnahmen pro Woche (bei „bei Bedarf“, geschätzt)",
      "packungsgroesse": "Packungsgröße (Einheiten pro Packung)",
@@ -46,7 +50,8 @@
      "rezeptpflichtig": "Rezeptpflichtig",
      "vorlauf_tage": "Vorlauf Nachbestellen (Tage)",
      "notiz": "Notiz"
-    }
+    },
+    "description": "Optional: Tageszeit-Schema (morgens/mittags/abends/nachts). Ist es gesetzt, ersetzt die Summe Dosis × Einnahmen pro Tag; bei „Alle N Tage“ = Menge am Einnahmetag; bei „Bei Bedarf“ ohne Wirkung."
    },
    "edit_form": {
     "title": "Medikament bearbeiten",
@@ -58,7 +63,11 @@
      "dosis": "Dosis je Einnahme",
      "einheit": "Einheit",
      "modus": "Einnahmerhythmus",
-     "pro_tag": "Einnahmen pro Tag (bei „täglich“)",
+     "morgens": "Schema: morgens (Stück, z. B. 0,5)",
+     "mittags": "Schema: mittags (Stück)",
+     "abends": "Schema: abends (Stück)",
+     "nachts": "Schema: zur Nacht (Stück)",
+     "pro_tag": "Einnahmen pro Tag (bei „täglich“, ohne Schema)",
      "intervall_tage": "Alle N Tage (bei „Intervall“)",
      "bedarf_pro_woche": "Einnahmen pro Woche (bei „bei Bedarf“, geschätzt)",
      "packungsgroesse": "Packungsgröße (Einheiten pro Packung)",
@@ -69,7 +78,8 @@
      "rezeptpflichtig": "Rezeptpflichtig",
      "vorlauf_tage": "Vorlauf Nachbestellen (Tage)",
      "notiz": "Notiz"
-    }
+    },
+    "description": "Optional: Tageszeit-Schema (morgens/mittags/abends/nachts). Ist es gesetzt, ersetzt die Summe Dosis × Einnahmen pro Tag; bei „Alle N Tage“ = Menge am Einnahmetag; bei „Bei Bedarf“ ohne Wirkung."
    },
    "catalog": {
     "title": "Aus Katalog übernehmen",

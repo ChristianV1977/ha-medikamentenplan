@@ -40,3 +40,19 @@ def test_restbestand_and_new_pack():
     m = calc.new_pack({**BASE, "restbestand": 1}, date(2026, 11, 1), packs=2)
     assert m["anbruch"] == "2026-11-01" and m["restbestand"] == 40
     assert calc.compute(m, date(2026, 11, 1))["reichweite_tage"] == 40
+
+
+def test_schema():
+    s = {**BASE, "morgens": 1, "abends": 1}
+    assert calc.daily_use(s) == 2 and calc.schema_text(s) == "morgens 1 · abends 1"
+    h = {**BASE, "morgens": 0.5}
+    assert calc.daily_use(h) == 0.5 and calc.schema_text(h) == "morgens 0,5"
+    assert calc.compute(h, T)["reichweite_tage"] == 40
+    assert calc.daily_use({**BASE, "dosis": 3, "pro_tag": 2, "morgens": 1}) == 1  # Schema ersetzt Dosis x pro_tag
+    assert calc.daily_use({**BASE, "modus": "intervall", "intervall_tage": 2, "morgens": 1, "abends": 1}) == 1
+    assert calc.daily_use({**BASE, "modus": "bedarf", "bedarf_pro_woche": 7, "morgens": 5}) == 1
+
+
+def test_old_entries_without_schema():
+    assert calc.daily_use({**BASE, "dosis": 2, "pro_tag": 3}) == 6 and calc.schema_text(BASE) == ""
+    assert calc.fmt_num(1.0) == "1" and calc.fmt_num(0.5) == "0,5"

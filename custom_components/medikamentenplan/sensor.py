@@ -32,9 +32,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 
 # Allowlist: Wirkstoff, Hersteller, Notiz, Verschreibungsdatum bleiben bewusst draussen (nur im Options-Flow sichtbar)
-ATTR_KEYS = ("name", "zweck", "dosis", "einheit", "modus", "pro_tag", "intervall_tage", "bedarf_pro_woche",
+ATTR_KEYS = ("name", "zweck", "dosis", "einheit", "modus", "morgens", "mittags", "abends", "nachts", "pro_tag", "intervall_tage", "bedarf_pro_woche",
              "packungsgroesse", "anbruch", "restbestand", "rezeptpflichtig", "vorlauf_tage")
-COMPUTED_KEYS = ("tagesverbrauch", "reichweite_tage", "aufbrauchdatum", "nachbestelldatum", "verbleibende_tage", "status")
+COMPUTED_KEYS = ("tagesverbrauch", "einnahmeschema", "reichweite_tage", "aufbrauchdatum", "nachbestelldatum", "verbleibende_tage", "status")
 
 
 class Reichweite(MedEntity, SensorEntity):
