@@ -120,7 +120,7 @@
     "20 mg",
     "40 mg"
    ],
-   "darreichungsform": "tablette",
+   "darreichungsform": "magensaftresistente_tablette",
    "packungsgroessen": [
     14,
     30,
@@ -138,7 +138,7 @@
     "20 mg",
     "40 mg"
    ],
-   "darreichungsform": "kapsel",
+   "darreichungsform": "magensaftresistente_hartkapsel",
    "packungsgroessen": [
     14,
     30,
@@ -155,7 +155,7 @@
     "20 mg",
     "40 mg"
    ],
-   "darreichungsform": "tablette",
+   "darreichungsform": "magensaftresistente_hartkapsel",
    "packungsgroessen": [
     14,
     30,
@@ -225,7 +225,7 @@
     "95 mg",
     "190 mg"
    ],
-   "darreichungsform": "tablette",
+   "darreichungsform": "retardtablette",
    "packungsgroessen": [
     30,
     50,
@@ -639,7 +639,7 @@
     "5000 I.E.",
     "20000 I.E."
    ],
-   "darreichungsform": "kapsel",
+   "darreichungsform": "weichkapsel",
    "packungsgroessen": [
     30,
     60,
@@ -657,7 +657,7 @@
     "300 mg",
     "400 mg"
    ],
-   "darreichungsform": "kapsel",
+   "darreichungsform": "hartkapsel",
    "packungsgroessen": [
     20,
     50,
@@ -687,7 +687,7 @@
    "staerken": [
     "100 µg/Hub"
    ],
-   "darreichungsform": "spritze",
+   "darreichungsform": "dosieraerosol",
    "packungsgroessen": [
     200
    ],
@@ -701,7 +701,7 @@
     "160/4,5 µg",
     "320/9 µg"
    ],
-   "darreichungsform": "spritze",
+   "darreichungsform": "inhalator_pulver",
    "packungsgroessen": [
     60,
     120,
@@ -716,7 +716,7 @@
    "staerken": [
     "18 µg"
    ],
-   "darreichungsform": "kapsel",
+   "darreichungsform": "inhalator_pulver",
    "packungsgroessen": [
     30,
     60,
@@ -732,7 +732,7 @@
     "0,05 %",
     "0,1 %"
    ],
-   "darreichungsform": "spritze",
+   "darreichungsform": "nasenspray",
    "packungsgroessen": [
     10
    ],
@@ -745,7 +745,7 @@
    "staerken": [
     "50 µg/Hub"
    ],
-   "darreichungsform": "spritze",
+   "darreichungsform": "nasenspray",
    "packungsgroessen": [
     10,
     18
@@ -760,7 +760,7 @@
     "0,1 %",
     "0,2 %"
    ],
-   "darreichungsform": "tropfen",
+   "darreichungsform": "augentropfen",
    "packungsgroessen": [
     10
    ],
@@ -773,7 +773,7 @@
    "staerken": [
     "50 µg/ml"
    ],
-   "darreichungsform": "tropfen",
+   "darreichungsform": "augentropfen",
    "packungsgroessen": [
     2.5,
     7.5
@@ -884,7 +884,7 @@
    "staerken": [
     "0,4 mg"
    ],
-   "darreichungsform": "kapsel",
+   "darreichungsform": "retardkapsel",
    "packungsgroessen": [
     30,
     60,
@@ -900,7 +900,7 @@
     "75 mg",
     "150 mg"
    ],
-   "darreichungsform": "kapsel",
+   "darreichungsform": "hartkapsel",
    "packungsgroessen": [
     56,
     98
@@ -916,7 +916,7 @@
     "300 mg",
     "400 mg"
    ],
-   "darreichungsform": "kapsel",
+   "darreichungsform": "hartkapsel",
    "packungsgroessen": [
     50,
     100

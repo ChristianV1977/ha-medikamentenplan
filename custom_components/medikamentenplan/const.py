@@ -4,7 +4,7 @@ PLATFORMS = ["sensor", "button"]
 SIGNAL_UPDATE = f"{DOMAIN}_update_{{}}"
 SIGNAL_NEW = f"{DOMAIN}_new_{{}}"
 
-FORMS = ["tablette", "kapsel", "tropfen", "saft", "spray", "salbe", "pflaster", "zaepfchen", "spritze", "pulver", "sonstige"]
+FORMS = ["tablette", "retardtablette", "filmtablette", "brausetablette", "schmelztablette", "kautablette", "magensaftresistente_tablette", "kapsel", "hartkapsel", "magensaftresistente_hartkapsel", "weichkapsel", "retardkapsel", "tropfen", "augentropfen", "saft", "spray", "nasenspray", "dosieraerosol", "inhalator_pulver", "salbe", "pflaster", "zaepfchen", "spritze", "pulver", "sonstige"]
 MODES = ["taeglich", "intervall", "bedarf"]
 # Felder, die beim "aus Katalog uebernehmen" mitkommen (keine Daten/Bestand)
 CATALOG_FIELDS = ["name", "hersteller", "wirkstoff", "darreichungsform", "dosis", "einheit", "modus",

@@ -2,7 +2,10 @@ import json
 from pathlib import Path
 
 D = Path(__file__).parent.parent / "custom_components/medikamentenplan/catalog"
-FORMS = {"tablette", "kapsel", "tropfen", "saft", "spray", "salbe", "pflaster", "zaepfchen", "spritze", "pulver", "sonstige"}
+import ast, re
+_src = (D.parent / "const.py").read_text()
+FORMS = set(ast.literal_eval(re.search(r"^FORMS = (\[.*?\])", _src, re.M).group(1)))
+assert {"retardtablette", "magensaftresistente_hartkapsel", "tablette"} <= FORMS
 
 
 def test_startliste():
