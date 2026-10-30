@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.7.1 (2026-10-30)
+- Scanner-Karte (Script 1.6.5): Kamera-Start mit Retry-Kette bei NotReadable/Overconstrained/Abort (environment ohne Aufloesung, ohne facingMode, video:true, jede videoinput-deviceId einzeln), jeder Versuch im Debug-Log, Hinweis "Kamera evtl. von anderer App belegt".
+- Neue optionale Kartenoption `pause_fully_motion: <switch-Entity der Fully-Bewegungserkennung>`: schaltet sie vor dem Kamerastart aus (1,8 s Wartezeit) und nach jedem Ende wieder ein (Code erkannt, Abbrechen, Fehler, Zeitueberschreitung 120 s, Karte entfernt, pagehide/Ausblenden).
+
 ## 1.7.0 (2026-10-30)
 - **"Neue Packung angefangen"** entscheidet selbst: Ist Vorrat da, wird die Packung mit dem fruehesten Verfall aus dem Vorrat angebrochen (deren Packungsgroesse, Vorrat minus 1). Ohne Vorrat gilt sie als neu gekauft (Anbruch heute, Bestand = Packungsgroesse x Anzahl). Eine persistent_notification nennt den eingetretenen Fall.
 - **Neuer Button** `button.medikament_*_auf_vorrat_legen` ("Packung auf Vorrat legen"): bucht Anzahl Packungen x Packungsgroesse aus den Popup-Feldern ohne Scan auf Vorrat (Verfall unbekannt), danach Anzahl = 1. Kein Verfall-Datumsfeld (bewusst weggelassen).

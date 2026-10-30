@@ -44,6 +44,7 @@ const row = (...kids) => h("div", { class: "row" }, ...kids);
 const fmtDate = (iso) => iso.split("-").reverse().join(".");
 
 const LOG = [];  // modulweit: bleibt auch erhalten, wenn HA die Karte neu erzeugt
+const RETRY_ERR = ["NotReadableError", "OverconstrainedError", "AbortError"];
 class MedikamentenplanScanCard extends HTMLElement {
   setConfig(config) {
     this._config = config || {};
@@ -53,8 +54,14 @@ class MedikamentenplanScanCard extends HTMLElement {
   set hass(hass) { this._hass = hass; }  // nur speichern: nie DOM/Stream anfassen
   getCardSize() { return 2; }
   static getStubConfig() { return {}; }
-  connectedCallback() { clearTimeout(this._dc); if (this._built) this._log("Karte verbunden"); }
+  connectedCallback() {
+    clearTimeout(this._dc); if (this._built) this._log("Karte verbunden");
+    this._pageHide ||= () => this._stop("Seite verlassen/ausgeblendet");
+    this._vis ||= () => { if (document.hidden) this._stop("Seite nicht mehr sichtbar"); };
+    window.addEventListener("pagehide", this._pageHide); document.addEventListener("visibilitychange", this._vis);
+  }
   disconnectedCallback() {
+    window.removeEventListener("pagehide", this._pageHide); document.removeEventListener("visibilitychange", this._vis);
     this._log("Karte getrennt (HA baut Ansicht um?)");
     clearTimeout(this._dc);  // Gnadenfrist: bei sofortigem Wiederanhaengen laeuft der Stream weiter
     this._dc = setTimeout(() => { if (!this.isConnected) this._abort("Karte wurde aus dem Dashboard entfernt"); }, 3000);
@@ -71,7 +78,7 @@ class MedikamentenplanScanCard extends HTMLElement {
 
   _log(t) {
     LOG.push(new Date().toTimeString().slice(0, 8) + " " + t);
-    if (LOG.length > 10) LOG.shift();
+    if (LOG.length > 30) LOG.shift();
     if (this._logPre) this._logPre.textContent = LOG.join("\n");
   }
 
@@ -96,9 +103,28 @@ class MedikamentenplanScanCard extends HTMLElement {
 
   _stop(reason = "") {
     if (this._tok || this._stream) this._log("Stop: " + (reason || "?"));
-    this._tok = null; clearTimeout(this._timer);
+    this._tok = null; clearTimeout(this._timer); clearTimeout(this._to);
+    if (reason !== "Neustart der Scan-Ansicht") this._restoreMotion(reason);
     try { this._stream?.getTracks().forEach((t) => t.stop()); } catch (e) { /* egal */ }
     this._stream = null;
+  }
+
+  // Optional: Fully-Bewegungserkennung (Schalter-Entity) waehrend des Scans pausieren; Sicherheitsnetz in HA stellt sie nach 3 min wieder her
+  async _pauseMotion() {
+    const ent = this._config?.pause_fully_motion;
+    if (!ent || this._paused) return;
+    if (this._hass?.states?.[ent]?.state !== "on") return this._log("Bewegungserkennung nicht aktiv (" + (this._hass?.states?.[ent]?.state ?? "unbekannt") + "), kein Pausieren");
+    this._paused = ent;  // vor dem await setzen: ein Stop waehrend des Aufrufs stellt wieder her
+    try { await this._hass.callService("switch", "turn_off", { entity_id: ent }); this._log("Bewegungserkennung pausiert (" + ent + ")"); }
+    catch (e) { this._log("Pausieren fehlgeschlagen: " + (e.message || e)); }
+  }
+
+  async _restoreMotion(reason) {
+    const ent = this._paused;
+    if (!ent) return;
+    this._paused = null;
+    try { await this._hass.callService("switch", "turn_on", { entity_id: ent }); this._log("Bewegungserkennung wiederhergestellt (" + reason + ")"); }
+    catch (e) { this._log("Wiederherstellen fehlgeschlagen: " + (e.message || e)); }
   }
 
   _show(...kids) { this._box.replaceChildren(...kids); }
@@ -130,6 +156,42 @@ class MedikamentenplanScanCard extends HTMLElement {
     } };
   }
 
+  // Kamera oeffnen; bei NotReadable/Overconstrained/Abort mit gelockerten Constraints erneut (je Versuch ein Log-Eintrag)
+  async _openCamera(alive) {
+    const md = navigator.mediaDevices;
+    const tries = [
+      ["environment+1080p", { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } }],
+      ["environment", { facingMode: { ideal: "environment" } }],
+      ["ohne facingMode", {}],
+      ["video:true", true],
+    ];
+    let last, enumerated = false;
+    for (let i = 0; i < tries.length || !enumerated; i++) {
+      if (i >= tries.length) {  // letzte Stufe: jede videoinput-deviceId einzeln
+        enumerated = true;
+        let devs = [];
+        try { devs = (await md.enumerateDevices()).filter((d) => d.kind === "videoinput"); } catch (e) { this._log("enumerateDevices: " + (e.name || e)); }
+        this._log("Kameras: " + (devs.map((d) => d.label || d.deviceId.slice(0, 8)).join(", ") || "keine"));
+        devs.forEach((d) => tries.push(["Geraet " + (d.label || d.deviceId.slice(0, 8)), { deviceId: { exact: d.deviceId } }]));
+        if (i >= tries.length) break;
+      }
+      const [name, video] = tries[i];
+      this._log("Kamera-Versuch " + (i + 1) + ": " + name);
+      let s;
+      try { s = await md.getUserMedia({ audio: false, video }); }
+      catch (e) {
+        last = e;
+        this._log("Versuch " + (i + 1) + " fehlgeschlagen: " + (e?.name || "") + " " + (e?.message || e));
+        if (!RETRY_ERR.includes(e?.name)) throw e;
+        continue;
+      }
+      if (!alive()) { s.getTracks().forEach((t) => t.stop()); this._log("Stream verworfen (Ansicht wurde ersetzt)"); return null; }
+      this._log("getUserMedia ok (" + name + ", " + (s.getVideoTracks()[0]?.label || "?") + ")");
+      return s;
+    }
+    throw last;
+  }
+
   async _scanView(msg = "") {
     const video = h("video", { autoplay: true, playsinline: true, muted: true });
     video.muted = true;
@@ -138,7 +200,7 @@ class MedikamentenplanScanCard extends HTMLElement {
     const torch = h("button", { class: "sec", text: "\u{1F526} Licht", hidden: true });
     const pre = (this._logPre = h("pre", { text: LOG.join("\n") }));
     // Zustandsmaschine: idle -> starting -> scanning -> found | error; jeder Wechsel setzt einen Statustext
-    const status = (state, t, cls = "muted") => { this._state = state; st.className = cls; st.textContent = t; this._log(state + ": " + t); };
+    const status = (state, t, cls = "muted") => { this._state = state; st.className = cls; st.textContent = t; this._log(state + ": " + t); if (state === "error") this._restoreMotion("Fehler"); };
     this._show(panel(h("h3", { text: "Packung scannen" }), video, st, torch, man,
       row(h("button", { class: "sec", text: "Eingabe pr\u00fcfen", onclick: () => { const v = man.value.trim(); if (v) { this._stop("manuelle Eingabe"); this._onCode(v.length <= 8 && /^\d+$/.test(v) ? "-" + v : v); } } }),
           h("button", { class: "sec", text: "Abbrechen", onclick: () => this._close() })),
@@ -151,13 +213,15 @@ class MedikamentenplanScanCard extends HTMLElement {
     try {
       let stream;
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } } });
-        this._log("getUserMedia ok");
+        if (this._config?.pause_fully_motion) { await this._pauseMotion(); if (!alive()) return; await new Promise((r) => setTimeout(r, 1800)); if (!alive()) return; }
+        stream = await this._openCamera(alive);
+        if (!stream) return;
       } catch (e) {
         const n = e?.name;
         status("error", n === "NotAllowedError" || n === "SecurityError" ? "Keine Kamera-Berechtigung (Browser/App-Einstellungen pr\u00fcfen). Eingabe von Hand geht."
           : n === "NotFoundError" || n === "OverconstrainedError" ? "Kamera nicht verf\u00fcgbar. Eingabe von Hand geht."
           : "Kamera-Fehler: " + (n || "") + " " + (e?.message || e) + ". Eingabe von Hand geht.", "err");
+        if (RETRY_ERR.includes(n)) st.textContent += " Kamera evtl. von anderer App belegt (z. B. Fully-Bewegungserkennung).";
         return;
       }
       if (!alive()) { this._log("Stream verworfen (Ansicht wurde ersetzt)"); stream.getTracks().forEach((t) => t.stop()); return; }
@@ -180,6 +244,7 @@ class MedikamentenplanScanCard extends HTMLElement {
       if (!alive()) return;
       this._detector = det.name;
       this._log("Detektor: " + det.name);
+      this._to = setTimeout(() => { if (alive()) { this._stop("Zeit\u00fcberschreitung"); status("error", "Zeit\u00fcberschreitung ohne Code. Bitte nochmal scannen.", "err"); } }, 120000);
       status("scanning", "Suche Code \u2026 den DataMatrix-Code (oder PZN-Strichcode) ruhig ins Bild halten.");
       const tick = async () => {
         if (!alive()) return;
