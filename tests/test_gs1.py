@@ -75,3 +75,14 @@ def test_xss_payload_rejected():
         assert gs1.parse(GS1_CODE.replace("ABC987654321", bad)).fehler, bad
         assert gs1.parse(PPN_CODE.replace("CH12345", bad)).fehler, bad
     assert gs1.parse(GS1_CODE.replace("271231", "27AB31")).fehler  # Verfall nur YYMMDD
+
+
+def test_invalid_expiry_month_day():
+    for bad in ("261300", "260000", "260231", "260132"):
+        assert gs1.parse(GS1_CODE.replace("271231", bad)).fehler, bad
+    assert gs1.parse(GS1_CODE.replace("271231", "280200")).verfall == date(2028, 2, 29)
+
+
+def test_empty_batch_is_optional():
+    s = gs1.parse(PPN_CODE.replace("1TCH12345", "1T"))
+    assert s.fehler is None and s.charge is None and s.pzn == "03752864"

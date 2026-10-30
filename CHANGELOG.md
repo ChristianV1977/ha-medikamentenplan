@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.6.2 (2026-10-30)
+- Verfallsdatum: Monat 00/13 und unmoegliche Tage (z. B. 260231) werden abgelehnt; leere Charge gilt als nicht vorhanden.
+
 ## 1.6.1 (2026-10-30) - Sicherheit
 - Scanner-Karte baut den Dialog nur noch per createElement/textContent (kein innerHTML mit Code-Inhalt, Medikamentennamen oder Fehlertexten, XSS-Schutz).
 - Parser verwirft Charge/Seriennummer mit unzulaessigen Zeichen (nur GS1-Zeichen ohne < > \" ' &, max. 20) und ungueltige Verfallsdaten; Test fuer eine XSS-Nutzlast in Charge/Seriennummer.

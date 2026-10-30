@@ -52,6 +52,8 @@ def _date(yymmdd: str) -> date | None:
     if not re.fullmatch(r"\d{6}", yymmdd):
         return None
     y, m, d = 2000 + int(yymmdd[:2]), int(yymmdd[2:4]), int(yymmdd[4:])
+    if not 1 <= m <= 12:
+        return None
     try:
         if d == 0:
             return (date(y + (m == 12), m % 12 + 1, 1)) - timedelta(days=1)
@@ -143,6 +145,7 @@ _SAFE = re.compile(r"[A-Za-z0-9!#%()*+,\-./:;=?_ ]{1,20}")  # GS1-Zeichen ohne <
 
 
 def _finish(sc: Scan, raw_date: str | None = None) -> Scan:
+    sc.charge, sc.seriennummer = sc.charge or None, sc.seriennummer or None  # leere Felder = nicht vorhanden
     for v in (sc.charge, sc.seriennummer):
         if v is not None and not _SAFE.fullmatch(v):
             return Scan(fehler="Charge/Seriennummer enthaelt unzulaessige Zeichen")
