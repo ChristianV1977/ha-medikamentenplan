@@ -18,8 +18,9 @@ button{font:inherit;cursor:pointer;border:0;border-radius:12px;padding:14px 16px
 button.sec{background:var(--secondary-background-color);color:var(--primary-text-color)}
 button.warn{background:var(--error-color,#c62828)}
 .main{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;font-size:1.1em;padding:18px}
-.ov{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;color:#fff;font-family:var(--paper-font-body1_-_font-family,sans-serif)}
-.box{width:min(520px,100%);display:flex;flex-direction:column;gap:12px}
+[hidden]{display:none!important}
+.box{width:100%;display:flex;flex-direction:column;gap:12px}
+.log{font-size:.75em;opacity:.8}.log pre{white-space:pre-wrap;margin:4px 0 0}
 .panel{background:var(--card-background-color,#222);color:var(--primary-text-color,#fff);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px}
 video{width:100%;max-height:55vh;border-radius:14px;background:#000;object-fit:cover}
 .row{display:flex;gap:10px;flex-wrap:wrap}.row>button{flex:1;min-width:130px}
@@ -42,17 +43,39 @@ const panel = (...kids) => h("div", { class: "panel" }, ...kids);
 const row = (...kids) => h("div", { class: "row" }, ...kids);
 const fmtDate = (iso) => iso.split("-").reverse().join(".");
 
+const LOG = [];  // modulweit: bleibt auch erhalten, wenn HA die Karte neu erzeugt
 class MedikamentenplanScanCard extends HTMLElement {
-  setConfig(config) { this._config = config || {}; this._render(); }
-  set hass(hass) { this._hass = hass; }
+  setConfig(config) {
+    this._config = config || {};
+    this._build();
+    this._main.textContent = "\u{1F4F7} " + (this._config.name || "Packung scannen");
+  }
+  set hass(hass) { this._hass = hass; }  // nur speichern: nie DOM/Stream anfassen
   getCardSize() { return 2; }
   static getStubConfig() { return {}; }
-
-  _render() {
-    if (!this.shadowRoot) this.attachShadow({ mode: "open" });
-    const root = this.shadowRoot;
-    root.replaceChildren(h("style", { text: CSS }), h("button", { class: "main", text: "\u{1F4F7} " + (this._config?.name || "Packung scannen"), onclick: () => this._open() }));
+  connectedCallback() { clearTimeout(this._dc); if (this._built) this._log("Karte verbunden"); }
+  disconnectedCallback() {
+    this._log("Karte getrennt (HA baut Ansicht um?)");
+    clearTimeout(this._dc);  // Gnadenfrist: bei sofortigem Wiederanhaengen laeuft der Stream weiter
+    this._dc = setTimeout(() => { if (!this.isConnected) this._abort("Karte wurde aus dem Dashboard entfernt"); }, 3000);
   }
+
+  _build() {
+    if (this._built) return;
+    this._built = true;
+    const root = this.attachShadow({ mode: "open" });
+    this._main = h("button", { class: "main", onclick: () => this._open() });
+    this._box = h("div", { class: "box", hidden: true });
+    root.append(h("style", { text: CSS }), this._main, this._box);
+  }
+
+  _log(t) {
+    LOG.push(new Date().toTimeString().slice(0, 8) + " " + t);
+    if (LOG.length > 10) LOG.shift();
+    if (this._logPre) this._logPre.textContent = LOG.join("\n");
+  }
+
+  _abort(reason) { this._stop(reason); if (this._st) { this._st.className = "err"; this._st.textContent = "Beendet: " + reason; } this._state = "error"; }
 
   async _ws(service, data, response = true) {
     const r = await this._hass.callWS({ type: "call_service", domain: "medikamentenplan", service, service_data: data, return_response: response });
@@ -60,21 +83,19 @@ class MedikamentenplanScanCard extends HTMLElement {
   }
 
   _open() {
-    this._ov = h("div", { class: "ov" });
-    const root = this._ov.attachShadow({ mode: "open" });
-    this._box = h("div", { class: "box" });
-    root.append(h("style", { text: CSS }), this._box);
-    document.body.appendChild(this._ov);
+    this._main.hidden = true; this._box.hidden = false;
     this._scanView();
   }
 
   async _close(cancelScan = true) {
-    this._stop();
-    this._ov?.remove(); this._ov = null;
+    this._stop("Abbrechen/Schlie\u00dfen");
+    this._box.replaceChildren(); this._box.hidden = true; this._main.hidden = false;
+    this._state = "idle";
     if (cancelScan) { try { await this._hass.callService("medikamentenplan", "scan_abbrechen"); } catch (e) { /* egal */ } }
   }
 
-  _stop() {
+  _stop(reason = "") {
+    if (this._tok || this._stream) this._log("Stop: " + (reason || "?"));
     this._tok = null; clearTimeout(this._timer);
     try { this._stream?.getTracks().forEach((t) => t.stop()); } catch (e) { /* egal */ }
     this._stream = null;
@@ -112,62 +133,70 @@ class MedikamentenplanScanCard extends HTMLElement {
   async _scanView(msg = "") {
     const video = h("video", { autoplay: true, playsinline: true, muted: true });
     video.muted = true;
-    const st = h("div", { class: "muted", text: "Kamera wird gestartet \u2026" });
-    const status = (t, cls = "muted") => { st.className = cls; st.textContent = t; };
+    const st = (this._st = h("div", { class: "muted", text: "Kamera wird gestartet \u2026" }));
     const man = h("input", { inputmode: "numeric", placeholder: "oder PZN / Code von Hand eingeben" });
     const torch = h("button", { class: "sec", text: "\u{1F526} Licht", hidden: true });
+    const pre = (this._logPre = h("pre", { text: LOG.join("\n") }));
+    // Zustandsmaschine: idle -> starting -> scanning -> found | error; jeder Wechsel setzt einen Statustext
+    const status = (state, t, cls = "muted") => { this._state = state; st.className = cls; st.textContent = t; this._log(state + ": " + t); };
     this._show(panel(h("h3", { text: "Packung scannen" }), video, st, torch, man,
-      row(h("button", { class: "sec", text: "Eingabe pr\u00fcfen", onclick: () => { const v = man.value.trim(); if (v) this._onCode(v.length <= 8 && /^\d+$/.test(v) ? "-" + v : v); } }),
-          h("button", { class: "sec", text: "Abbrechen", onclick: () => this._close() }))));
-    if (msg) status(msg);
-    this._stop();
+      row(h("button", { class: "sec", text: "Eingabe pr\u00fcfen", onclick: () => { const v = man.value.trim(); if (v) { this._stop("manuelle Eingabe"); this._onCode(v.length <= 8 && /^\d+$/.test(v) ? "-" + v : v); } } }),
+          h("button", { class: "sec", text: "Abbrechen", onclick: () => this._close() })),
+      h("details", { class: "log" }, h("summary", { text: "Debug-Log" }), pre)));
+    this._stop("Neustart der Scan-Ansicht");
     const tok = (this._tok = {});
     const alive = () => this._tok === tok;
-    if (!navigator.mediaDevices?.getUserMedia) return status("Kamera nicht verf\u00fcgbar (HTTPS und Kamera-Erlaubnis n\u00f6tig). Eingabe von Hand geht.", "err");
+    status("starting", msg || "Kamera wird gestartet \u2026");
+    if (!navigator.mediaDevices?.getUserMedia) return status("error", "Kamera nicht verf\u00fcgbar (HTTPS und Kamera-Erlaubnis n\u00f6tig). Eingabe von Hand geht.", "err");
     try {
       let stream;
       try {
         stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } } });
+        this._log("getUserMedia ok");
       } catch (e) {
         const n = e?.name;
-        status(n === "NotAllowedError" || n === "SecurityError" ? "Keine Kamera-Berechtigung (Browser/App-Einstellungen pr\u00fcfen). Eingabe von Hand geht."
+        status("error", n === "NotAllowedError" || n === "SecurityError" ? "Keine Kamera-Berechtigung (Browser/App-Einstellungen pr\u00fcfen). Eingabe von Hand geht."
           : n === "NotFoundError" || n === "OverconstrainedError" ? "Kamera nicht verf\u00fcgbar. Eingabe von Hand geht."
-          : "Kamera-Fehler: " + (e?.message || e) + ". Eingabe von Hand geht.", "err");
+          : "Kamera-Fehler: " + (n || "") + " " + (e?.message || e) + ". Eingabe von Hand geht.", "err");
         return;
       }
-      if (!alive()) { stream.getTracks().forEach((t) => t.stop()); return; }
+      if (!alive()) { this._log("Stream verworfen (Ansicht wurde ersetzt)"); stream.getTracks().forEach((t) => t.stop()); return; }
       this._stream = stream;
       video.srcObject = stream;
       const track = stream.getVideoTracks()[0];
+      track?.addEventListener("ended", () => { if (alive()) { this._stop("Kamera-Track vom System beendet"); status("error", "Die Kamera wurde vom System beendet (Berechtigung/App im Hintergrund?). Bitte nochmal scannen.", "err"); } });
       const caps = track?.getCapabilities?.() || {};
       if (caps.focusMode?.includes("continuous")) track.applyConstraints({ advanced: [{ focusMode: "continuous" }] }).catch(() => {});
       if (caps.torch) {
         let on = false;
         torch.hidden = false;
-        torch.onclick = async () => { try { await track.applyConstraints({ advanced: [{ torch: !on }] }); on = !on; } catch (e) { status("Licht nicht schaltbar: " + (e.message || e), "err"); } };
+        torch.onclick = async () => { try { await track.applyConstraints({ advanced: [{ torch: !on }] }); on = !on; } catch (e) { this._log("Licht-Fehler: " + (e.message || e)); } };
       }
-      try { await video.play(); } catch (e) { return status("Video konnte nicht gestartet werden: " + (e.message || e), "err"); }
-      status("Detektor wird geladen \u2026");
+      try { await video.play(); this._log("play ok " + video.videoWidth + "x" + video.videoHeight); }
+      catch (e) { this._stop("play() fehlgeschlagen"); return status("error", "Video konnte nicht gestartet werden: " + (e.message || e), "err"); }
+      if (!alive()) return;
+      status("starting", "Detektor wird geladen \u2026");
       const det = await this._makeDetect();
       if (!alive()) return;
       this._detector = det.name;
-      status("Suche Code \u2026 den DataMatrix-Code (oder PZN-Strichcode) ruhig ins Bild halten.");
+      this._log("Detektor: " + det.name);
+      status("scanning", "Suche Code \u2026 den DataMatrix-Code (oder PZN-Strichcode) ruhig ins Bild halten.");
       const tick = async () => {
         if (!alive()) return;
         let code;
         if (video.readyState >= 2 && video.videoWidth) { try { code = await det.run(video); } catch (e) { /* naechster Frame */ } }
         if (!alive()) return;
-        if (code) { status("Code erkannt", "ok"); this._onCode(code); return; }
+        if (code) { status("found", "Code erkannt", "ok"); this._stop("Code erkannt"); this._onCode(code); return; }
         this._timer = setTimeout(tick, 150);
       };
       tick();
     } catch (e) {
-      if (alive()) status("Kamera-Fehler: " + (e.message || e) + ". Eingabe von Hand geht.", "err");
+      if (alive()) { this._stop("Ausnahme"); status("error", "Kamera-Fehler: " + (e.message || e) + ". Eingabe von Hand geht.", "err"); }
     }
   }
 
   async _onCode(code) {
-    this._stop();
+    this._stop("Code \u00fcbernommen");
     this._code = code;
     this._show(panel(h("h3", { text: "Code erkannt" }), h("div", { class: "muted", text: "Pr\u00fcfe\u2026" })));
     let r;

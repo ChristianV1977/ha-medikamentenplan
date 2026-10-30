@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.6.4 (2026-10-30)
+- Scanner-Karte: Vorschau inline in der Karte (kein Overlay mehr), Zustandsmaschine (idle/starting/scanning/found/error), `set hass` speichert nur. Jeder Stop schreibt Status mit Grund, Track-ended und Entfernen der Karte (3 s Gnadenfrist bei Neuaufbau) werden angezeigt, eingeklapptes Debug-Log mit den letzten 10 Ereignissen.
+
 ## 1.6.3 (2026-10-30)
 - Scanner-Karte: eigene Kamera-Steuerung statt ZXing-Reader (autoplay/muted/playsinline, play() mit Fehlerbehandlung, sichtbare Live-Vorschau). Erkennung nativ per BarcodeDetector (wenn data_matrix unterstuetzt), sonst ZXing per Canvas (max. 1280 px).
 - Sichtbarer Status (Kamera startet / Suche Code / Code erkannt) und klare Fehlertexte (keine Berechtigung, Kamera nicht verfuegbar, Exception-Text); Stream wird nach Erkennung/Abbrechen gestoppt; Licht-Schalter und Dauerfokus, wenn unterstuetzt.
