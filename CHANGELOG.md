@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.1 (2026-10-30) - Sicherheit
+- Scanner-Karte baut den Dialog nur noch per createElement/textContent (kein innerHTML mit Code-Inhalt, Medikamentennamen oder Fehlertexten, XSS-Schutz).
+- Parser verwirft Charge/Seriennummer mit unzulaessigen Zeichen (nur GS1-Zeichen ohne < > \" ' &, max. 20) und ungueltige Verfallsdaten; Test fuer eine XSS-Nutzlast in Charge/Seriennummer.
+
 ## 1.6.0 (2026-10-30) - Packungs-Scan und Vorrat
 - **Scan:** DataMatrix (securPharm, IFA/PPN `9N11…` oder GS1/NTIN `01 04150…`) und PZN-Strichcode (Code 39 `-12345678`) werden lokal geparst: PZN (mit Prüfziffer), Charge, Verfall, Seriennummer. Reiner Parser `gs1.py`, kein Internet.
 - **Scanner-Karte** `custom:medikamentenplan-scan-card`: Kamera im Browser/der Companion-App (getUserMedia, Dekodierung mit mitgeliefertem ZXing, kein CDN), danach Dialog "Auf Vorrat legen" / "Jetzt anfangen" bzw. Zuordnung bei unbekannter PZN. Eingabe von Hand als Rückfall.

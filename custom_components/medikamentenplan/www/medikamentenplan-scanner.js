@@ -27,16 +27,31 @@ input,select{font:inherit;padding:12px;border-radius:10px;border:1px solid var(-
 h3{margin:0}.muted{opacity:.7;font-size:.9em}.err{color:var(--error-color,#ff8a80)}.ok{color:var(--success-color,#81c784)}
 `;
 
+// DOM nur per createElement/textContent: keine dynamischen Werte (Code-Inhalt, Namen, Fehlertexte) in innerHTML
+function h(tag, props = {}, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (k === "text") e.textContent = v;
+    else if (k === "onclick") e.onclick = v;
+    else if (v !== undefined && v !== null && v !== false) e.setAttribute(k, v === true ? "" : v);
+  }
+  for (const c of kids.flat()) if (c) e.append(c);
+  return e;
+}
+const panel = (...kids) => h("div", { class: "panel" }, ...kids);
+const row = (...kids) => h("div", { class: "row" }, ...kids);
+const fmtDate = (iso) => iso.split("-").reverse().join(".");
+
 class MedikamentenplanScanCard extends HTMLElement {
   setConfig(config) { this._config = config; this._render(); }
-  set hass(h) { this._hass = h; }
+  set hass(hass) { this._hass = hass; }
   getCardSize() { return 2; }
   static getStubConfig() { return {}; }
 
   _render() {
     if (!this.shadowRoot) this.attachShadow({ mode: "open" });
-    this.shadowRoot.innerHTML = `<style>${CSS}</style><button class="main" id="go">📷 ${this._config.name || "Packung scannen"}</button>`;
-    this.shadowRoot.getElementById("go").onclick = () => this._open();
+    const root = this.shadowRoot;
+    root.replaceChildren(h("style", { text: CSS }), h("button", { class: "main", text: "\u{1F4F7} " + (this._config.name || "Packung scannen"), onclick: () => this._open() }));
   }
 
   async _ws(service, data, response = true) {
@@ -45,11 +60,10 @@ class MedikamentenplanScanCard extends HTMLElement {
   }
 
   _open() {
-    this._ov = document.createElement("div");
-    this._ov.className = "ov";
+    this._ov = h("div", { class: "ov" });
     const root = this._ov.attachShadow({ mode: "open" });
-    root.innerHTML = `<style>${CSS}</style><div class="box" id="box"></div>`;
-    this._box = root.getElementById("box");
+    this._box = h("div", { class: "box" });
+    root.append(h("style", { text: CSS }), this._box);
     document.body.appendChild(this._ov);
     this._scanView();
   }
@@ -62,17 +76,17 @@ class MedikamentenplanScanCard extends HTMLElement {
 
   _stop() { try { this._reader?.reset(); } catch (e) { /* egal */ } this._reader = null; }
 
-  _set(html) { this._box.innerHTML = html; return (id) => this._box.querySelector("#" + id); }
+  _show(...kids) { this._box.replaceChildren(...kids); }
 
   async _scanView(msg = "") {
-    const $ = this._set(`<div class="panel"><h3>Packung scannen</h3>
-      <video id="v" playsinline muted></video>
-      <div class="muted" id="st">${msg || "Den DataMatrix-Code (oder PZN-Strichcode) ruhig ins Bild halten."}</div>
-      <input id="man" inputmode="numeric" placeholder="oder PZN / Code von Hand eingeben">
-      <div class="row"><button class="sec" id="manok">Eingabe prüfen</button><button class="sec" id="x">Abbrechen</button></div></div>`);
-    $("x").onclick = () => this._close();
-    $("manok").onclick = () => { const v = $("man").value.trim(); if (v) this._onCode(v.length <= 8 && /^\d+$/.test(v) ? "-" + v : v); };
-    if (!navigator.mediaDevices?.getUserMedia) { $("st").innerHTML = '<span class="err">Kamera nicht verfügbar (HTTPS und Kamera-Erlaubnis nötig). Eingabe von Hand geht.</span>'; return; }
+    const video = h("video", { playsinline: true, muted: true });
+    video.muted = true;
+    const st = h("div", { class: "muted", text: msg || "Den DataMatrix-Code (oder PZN-Strichcode) ruhig ins Bild halten." });
+    const man = h("input", { inputmode: "numeric", placeholder: "oder PZN / Code von Hand eingeben" });
+    this._show(panel(h("h3", { text: "Packung scannen" }), video, st, man,
+      row(h("button", { class: "sec", text: "Eingabe pr\u00fcfen", onclick: () => { const v = man.value.trim(); if (v) this._onCode(v.length <= 8 && /^\d+$/.test(v) ? "-" + v : v); } }),
+          h("button", { class: "sec", text: "Abbrechen", onclick: () => this._close() }))));
+    if (!navigator.mediaDevices?.getUserMedia) { st.className = "err"; st.textContent = "Kamera nicht verf\u00fcgbar (HTTPS und Kamera-Erlaubnis n\u00f6tig). Eingabe von Hand geht."; return; }
     try {
       await loadZXing();
       const Z = window.ZXing;
@@ -81,62 +95,65 @@ class MedikamentenplanScanCard extends HTMLElement {
       let done = false;
       await this._reader.decodeFromConstraints(
         { video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 }, advanced: [{ focusMode: "continuous" }] } },
-        $("v"), (res) => { if (res && !done) { done = true; this._stop(); this._onCode(res.getText()); } });
+        video, (res) => { if (res && !done) { done = true; this._stop(); this._onCode(res.getText()); } });
     } catch (e) {
-      $("st").innerHTML = `<span class="err">Kamera-Fehler: ${e.message || e}. Eingabe von Hand geht.</span>`;
+      st.className = "err"; st.textContent = "Kamera-Fehler: " + (e.message || e) + ". Eingabe von Hand geht.";
     }
   }
 
   async _onCode(code) {
     this._stop();
     this._code = code;
-    this._set(`<div class="panel"><h3>Code erkannt</h3><div class="muted">Prüfe…</div></div>`);
+    this._show(panel(h("h3", { text: "Code erkannt" }), h("div", { class: "muted", text: "Pr\u00fcfe\u2026" })));
     let r;
     try { r = await this._ws("scan_code", { code }); }
     catch (e) { return this._msg("Fehler", e.message || String(e), true); }
-    this._res = r;
-    const info = [r.pzn && "PZN " + r.pzn, r.charge && "Charge " + r.charge, r.verfall && "Verfall " + r.verfall.split("-").reverse().join(".")].filter(Boolean).join(" · ");
+    const info = [r.pzn && "PZN " + r.pzn, r.charge && "Charge " + r.charge, r.verfall && "Verfall " + fmtDate(r.verfall)].filter(Boolean).join(" \u00b7 ");
     if (r.status === "ungueltig") return this._msg("Code nicht lesbar", r.fehler || "", true, true);
     if (r.status === "doppelt") return this._msg("Schon gebucht", "Diese Packung (Seriennummer) wurde bereits gebucht. " + info, true);
     this._choose(r, info);
   }
 
   _msg(title, text, bad = false, retry = false) {
-    const $ = this._set(`<div class="panel"><h3 class="${bad ? "err" : "ok"}">${title}</h3><div>${text}</div>
-      <div class="row">${retry ? '<button id="again">Nochmal scannen</button>' : '<button id="again">Weitere Packung scannen</button>'}<button class="sec" id="x">Schließen</button></div></div>`);
-    $("again").onclick = () => this._scanView(); $("x").onclick = () => this._close(false);
+    this._show(panel(h("h3", { class: bad ? "err" : "ok", text: title }), h("div", { text }),
+      row(h("button", { text: retry ? "Nochmal scannen" : "Weitere Packung scannen", onclick: () => this._scanView() }),
+          h("button", { class: "sec", text: "Schlie\u00dfen", onclick: () => this._close(false) }))));
   }
 
   _choose(r, info) {
     const known = r.status === "bekannt";
     const meds = known ? r.medikamente : r.kandidaten;
-    const label = (m) => `${m.name}${m.plan ? " (" + m.plan + ")" : ""}`;
-    const opts = meds.map((m, i) => `<option value="${i}">${label(m)}</option>`).join("");
-    const $ = this._set(`<div class="panel"><h3>${known ? (meds.length === 1 ? label(meds[0]) : "Welches Medikament?") : "Unbekannte Packung"}</h3>
-      <div class="muted">${info}</div>
-      ${known && meds.length === 1 ? `<div class="muted">Vorrat: ${meds[0].vorrat_packungen} Packung(en)</div>` : `<select id="sel">${known ? "" : '<option value="">Medikament wählen…</option>'}${opts}</select>`}
-      ${known ? "" : '<div class="muted">Die PZN wird gemerkt, beim nächsten Scan erkennt HA die Packung.</div>'}
-      <input id="gr" type="number" step="any" min="0.01" inputmode="decimal" placeholder="Packungsgröße (Stück), optional">
-      <div class="row"><button id="vor">Auf Vorrat legen</button><button id="anf">Jetzt anfangen</button></div>
-      <button class="sec" id="x">Abbrechen</button></div>`);
-    $("x").onclick = () => this._close();
+    const label = (m) => m.name + (m.plan ? " (" + m.plan + ")" : "");
+    let sel = null;
+    if (!(known && meds.length === 1)) {
+      sel = h("select", {});
+      if (!known) sel.append(h("option", { value: "", text: "Medikament w\u00e4hlen\u2026" }));
+      meds.forEach((m, i) => sel.append(h("option", { value: String(i), text: label(m) })));
+    }
+    const gr = h("input", { type: "number", step: "any", min: "0.01", inputmode: "decimal", placeholder: "Packungsgr\u00f6\u00dfe (St\u00fcck), optional" });
     const pick = () => {
-      const s = $("sel"); const i = s ? s.value : "0";
-      if (i === "") { this._msg("Bitte Medikament wählen", "", true, false); setTimeout(() => this._choose(r, info), 1200); return null; }
+      const i = sel ? sel.value : "0";
+      if (i === "") { this._msg("Bitte Medikament w\u00e4hlen", "", true, false); setTimeout(() => this._choose(r, info), 1200); return null; }
       return meds[+i];
     };
     const book = async (service) => {
       const m = pick(); if (!m) return;
       const data = { code: this._code, entity_id: m.entity_id };
-      const g = parseFloat($("gr").value); if (g > 0) data.packungsgroesse = g;
+      const g = parseFloat(gr.value); if (g > 0) data.packungsgroesse = g;
       try {
         const out = await this._ws(service, data);
         const mm = out.medikament || m;
-        this._msg("Gebucht", `${mm.name}: ${service === "vorrat_hinzufuegen" ? "auf Vorrat gelegt (jetzt " + mm.vorrat_packungen + " Packung(en))" : "Packung angefangen"}.`);
+        this._msg("Gebucht", mm.name + ": " + (service === "vorrat_hinzufuegen" ? "auf Vorrat gelegt (jetzt " + mm.vorrat_packungen + " Packung(en))" : "Packung angefangen") + ".");
       } catch (e) { this._msg("Fehler", e.message || String(e), true, true); }
     };
-    $("vor").onclick = () => book("vorrat_hinzufuegen");
-    $("anf").onclick = () => book("packung_anfangen");
+    this._show(panel(
+      h("h3", { text: known ? (meds.length === 1 ? label(meds[0]) : "Welches Medikament?") : "Unbekannte Packung" }),
+      h("div", { class: "muted", text: info }),
+      known && meds.length === 1 ? h("div", { class: "muted", text: "Vorrat: " + meds[0].vorrat_packungen + " Packung(en)" }) : sel,
+      known ? null : h("div", { class: "muted", text: "Die PZN wird gemerkt, beim n\u00e4chsten Scan erkennt HA die Packung." }),
+      gr,
+      row(h("button", { text: "Auf Vorrat legen", onclick: () => book("vorrat_hinzufuegen") }), h("button", { text: "Jetzt anfangen", onclick: () => book("packung_anfangen") })),
+      h("button", { class: "sec", text: "Abbrechen", onclick: () => this._close() })));
   }
 }
 if (!customElements.get("medikamentenplan-scan-card")) customElements.define("medikamentenplan-scan-card", MedikamentenplanScanCard);

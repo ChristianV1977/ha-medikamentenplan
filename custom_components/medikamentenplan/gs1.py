@@ -116,28 +116,38 @@ def parse(raw: str) -> Scan:
             if re.fullmatch(r"11\d{8,10}", ppn):  # PRA-Code 11 + PZN-8 (+ 2 Pruefziffern mod 97)
                 pzn = ppn[2:10]
             charge, verf, ser = f.get("1T"), _date(f.get("D", "")), f.get("S")
+            rawd = f.get("D")
             gtin = None
         elif re.match(r"^(01|9N|10|17|21)", s):
             if s.startswith("9N"):  # PPN ohne Envelope (nur 9N...)
                 f = _fields_ifa(s)
                 ppn = f.get("9N", "")
                 pzn = ppn[2:10] if re.fullmatch(r"11\d{8,10}", ppn) else None
-                return _finish(Scan(pzn=pzn, charge=f.get("1T"), verfall=_date(f.get("D", "")), seriennummer=f.get("S"), art="ppn"))
+                return _finish(Scan(pzn=pzn, charge=f.get("1T"), verfall=_date(f.get("D", "")), seriennummer=f.get("S"), art="ppn"), f.get("D"))
             f = _fields_gs1(s)
             gtin = f.get("01")
             pzn = None
             if gtin and gtin_ok(gtin) and gtin.startswith("04150"):  # NTIN: 0 + 4150 + PZN-8 + GS1-Pruefziffer
                 pzn = gtin[5:13]
             charge, verf, ser = f.get("10"), _date(f.get("17", "")), f.get("21")
+            rawd = f.get("17")
             art = "gs1"
         else:
             return Scan(fehler="Code nicht erkannt")
     except ValueError as e:
         return Scan(fehler=str(e))
-    return _finish(Scan(pzn=pzn, gtin=gtin, charge=charge or None, verfall=verf, seriennummer=ser or None, art=art))
+    return _finish(Scan(pzn=pzn, gtin=gtin, charge=charge or None, verfall=verf, seriennummer=ser or None, art=art), rawd)
 
 
-def _finish(sc: Scan) -> Scan:
+_SAFE = re.compile(r"[A-Za-z0-9!#%()*+,\-./:;=?_ ]{1,20}")  # GS1-Zeichen ohne < > " ' &, max. 20
+
+
+def _finish(sc: Scan, raw_date: str | None = None) -> Scan:
+    for v in (sc.charge, sc.seriennummer):
+        if v is not None and not _SAFE.fullmatch(v):
+            return Scan(fehler="Charge/Seriennummer enthaelt unzulaessige Zeichen")
+    if raw_date and sc.verfall is None:
+        return Scan(fehler="Verfallsdatum ungueltig")
     if sc.pzn and not pzn8_ok(sc.pzn):
         sc.fehler = "PZN-Pruefziffer ungueltig"
         sc.pzn = None

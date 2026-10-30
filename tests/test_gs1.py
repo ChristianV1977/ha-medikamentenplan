@@ -67,3 +67,11 @@ def test_duplicate_serial_detection():
     assert a.serial_key in serials and b.serial_key not in serials
     assert gs1.parse(GS1_CODE).serial_key == a.serial_key  # derselbe Scan = doppelt
     assert gs1.parse("-03752864").serial_key is None  # Strichcode hat keine Seriennummer
+
+
+def test_xss_payload_rejected():
+    for bad in ("<img src=x onerror=alert(1)>", 'a"b', "a'b", "a&b", "x" * 21):
+        assert gs1.parse(GS1_CODE.replace("CH12345", bad)).fehler, bad
+        assert gs1.parse(GS1_CODE.replace("ABC987654321", bad)).fehler, bad
+        assert gs1.parse(PPN_CODE.replace("CH12345", bad)).fehler, bad
+    assert gs1.parse(GS1_CODE.replace("271231", "27AB31")).fehler  # Verfall nur YYMMDD
