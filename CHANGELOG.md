@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.3 (2026-10-30)
+- Scanner-Karte: eigene Kamera-Steuerung statt ZXing-Reader (autoplay/muted/playsinline, play() mit Fehlerbehandlung, sichtbare Live-Vorschau). Erkennung nativ per BarcodeDetector (wenn data_matrix unterstuetzt), sonst ZXing per Canvas (max. 1280 px).
+- Sichtbarer Status (Kamera startet / Suche Code / Code erkannt) und klare Fehlertexte (keine Berechtigung, Kamera nicht verfuegbar, Exception-Text); Stream wird nach Erkennung/Abbrechen gestoppt; Licht-Schalter und Dauerfokus, wenn unterstuetzt.
+
 ## 1.6.2 (2026-10-30)
 - Verfallsdatum: Monat 00/13 und unmoegliche Tage (z. B. 260231) werden abgelehnt; leere Charge gilt als nicht vorhanden.
 

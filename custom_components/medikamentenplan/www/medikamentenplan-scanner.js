@@ -1,4 +1,4 @@
-/* Medikamentenplan: Scanner-Karte. Kamera via getUserMedia, Dekodierung lokal (ZXing, mitgeliefert, kein CDN). */
+/* Medikamentenplan: Scanner-Karte. Kamera via getUserMedia, Erkennung native BarcodeDetector, Fallback ZXing (lokal mitgeliefert, kein CDN). */
 const BASE = new URL(".", import.meta.url).href;
 let zxingPromise;
 function loadZXing() {
@@ -43,7 +43,7 @@ const row = (...kids) => h("div", { class: "row" }, ...kids);
 const fmtDate = (iso) => iso.split("-").reverse().join(".");
 
 class MedikamentenplanScanCard extends HTMLElement {
-  setConfig(config) { this._config = config; this._render(); }
+  setConfig(config) { this._config = config || {}; this._render(); }
   set hass(hass) { this._hass = hass; }
   getCardSize() { return 2; }
   static getStubConfig() { return {}; }
@@ -51,7 +51,7 @@ class MedikamentenplanScanCard extends HTMLElement {
   _render() {
     if (!this.shadowRoot) this.attachShadow({ mode: "open" });
     const root = this.shadowRoot;
-    root.replaceChildren(h("style", { text: CSS }), h("button", { class: "main", text: "\u{1F4F7} " + (this._config.name || "Packung scannen"), onclick: () => this._open() }));
+    root.replaceChildren(h("style", { text: CSS }), h("button", { class: "main", text: "\u{1F4F7} " + (this._config?.name || "Packung scannen"), onclick: () => this._open() }));
   }
 
   async _ws(service, data, response = true) {
@@ -74,30 +74,95 @@ class MedikamentenplanScanCard extends HTMLElement {
     if (cancelScan) { try { await this._hass.callService("medikamentenplan", "scan_abbrechen"); } catch (e) { /* egal */ } }
   }
 
-  _stop() { try { this._reader?.reset(); } catch (e) { /* egal */ } this._reader = null; }
+  _stop() {
+    this._tok = null; clearTimeout(this._timer);
+    try { this._stream?.getTracks().forEach((t) => t.stop()); } catch (e) { /* egal */ }
+    this._stream = null;
+  }
 
   _show(...kids) { this._box.replaceChildren(...kids); }
 
+  // Erkennung: native BarcodeDetector (Chrome Android) wenn data_matrix unterstuetzt, sonst ZXing (lokal) per Canvas
+  async _makeDetect() {
+    const want = ["data_matrix", "code_39", "code_128", "ean_13", "qr_code"];
+    if (this._config?.detector !== "zxing" && window.BarcodeDetector) {
+      try {
+        const sup = await window.BarcodeDetector.getSupportedFormats();
+        if (sup.includes("data_matrix")) {
+          const bd = new window.BarcodeDetector({ formats: want.filter((f) => sup.includes(f)) });
+          return { name: "native", run: async (v) => (await bd.detect(v))[0]?.rawValue };
+        }
+      } catch (e) { /* weiter mit ZXing */ }
+    }
+    await loadZXing();
+    const Z = window.ZXing;
+    const rd = new Z.MultiFormatReader();
+    rd.setHints(new Map([[Z.DecodeHintType.POSSIBLE_FORMATS, [Z.BarcodeFormat.DATA_MATRIX, Z.BarcodeFormat.CODE_39, Z.BarcodeFormat.CODE_128, Z.BarcodeFormat.EAN_13, Z.BarcodeFormat.QR_CODE]]]));  // kein TRY_HARDER: scheitert mit mehreren Formaten (getestet)
+    const cv = document.createElement("canvas");
+    const cx = cv.getContext("2d", { willReadFrequently: true });
+    return { name: "zxing", run: (v) => {
+      const k = Math.min(1, 1280 / v.videoWidth);
+      cv.width = Math.round(v.videoWidth * k); cv.height = Math.round(v.videoHeight * k);
+      cx.drawImage(v, 0, 0, cv.width, cv.height);
+      try { return rd.decode(new Z.BinaryBitmap(new Z.HybridBinarizer(new Z.HTMLCanvasElementLuminanceSource(cv)))).getText(); }
+      catch (e) { return null; }  // NotFoundException = kein Code im Bild
+    } };
+  }
+
   async _scanView(msg = "") {
-    const video = h("video", { playsinline: true, muted: true });
+    const video = h("video", { autoplay: true, playsinline: true, muted: true });
     video.muted = true;
-    const st = h("div", { class: "muted", text: msg || "Den DataMatrix-Code (oder PZN-Strichcode) ruhig ins Bild halten." });
+    const st = h("div", { class: "muted", text: "Kamera wird gestartet \u2026" });
+    const status = (t, cls = "muted") => { st.className = cls; st.textContent = t; };
     const man = h("input", { inputmode: "numeric", placeholder: "oder PZN / Code von Hand eingeben" });
-    this._show(panel(h("h3", { text: "Packung scannen" }), video, st, man,
+    const torch = h("button", { class: "sec", text: "\u{1F526} Licht", hidden: true });
+    this._show(panel(h("h3", { text: "Packung scannen" }), video, st, torch, man,
       row(h("button", { class: "sec", text: "Eingabe pr\u00fcfen", onclick: () => { const v = man.value.trim(); if (v) this._onCode(v.length <= 8 && /^\d+$/.test(v) ? "-" + v : v); } }),
           h("button", { class: "sec", text: "Abbrechen", onclick: () => this._close() }))));
-    if (!navigator.mediaDevices?.getUserMedia) { st.className = "err"; st.textContent = "Kamera nicht verf\u00fcgbar (HTTPS und Kamera-Erlaubnis n\u00f6tig). Eingabe von Hand geht."; return; }
+    if (msg) status(msg);
+    this._stop();
+    const tok = (this._tok = {});
+    const alive = () => this._tok === tok;
+    if (!navigator.mediaDevices?.getUserMedia) return status("Kamera nicht verf\u00fcgbar (HTTPS und Kamera-Erlaubnis n\u00f6tig). Eingabe von Hand geht.", "err");
     try {
-      await loadZXing();
-      const Z = window.ZXing;
-      const hints = new Map([[Z.DecodeHintType.POSSIBLE_FORMATS, [Z.BarcodeFormat.DATA_MATRIX, Z.BarcodeFormat.CODE_39, Z.BarcodeFormat.CODE_128, Z.BarcodeFormat.EAN_13, Z.BarcodeFormat.QR_CODE]]]);  // kein TRY_HARDER: scheitert mit mehreren Formaten (getestet)
-      this._reader = new Z.BrowserMultiFormatReader(hints, 150);
-      let done = false;
-      await this._reader.decodeFromConstraints(
-        { video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 }, advanced: [{ focusMode: "continuous" }] } },
-        video, (res) => { if (res && !done) { done = true; this._stop(); this._onCode(res.getText()); } });
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } } });
+      } catch (e) {
+        const n = e?.name;
+        status(n === "NotAllowedError" || n === "SecurityError" ? "Keine Kamera-Berechtigung (Browser/App-Einstellungen pr\u00fcfen). Eingabe von Hand geht."
+          : n === "NotFoundError" || n === "OverconstrainedError" ? "Kamera nicht verf\u00fcgbar. Eingabe von Hand geht."
+          : "Kamera-Fehler: " + (e?.message || e) + ". Eingabe von Hand geht.", "err");
+        return;
+      }
+      if (!alive()) { stream.getTracks().forEach((t) => t.stop()); return; }
+      this._stream = stream;
+      video.srcObject = stream;
+      const track = stream.getVideoTracks()[0];
+      const caps = track?.getCapabilities?.() || {};
+      if (caps.focusMode?.includes("continuous")) track.applyConstraints({ advanced: [{ focusMode: "continuous" }] }).catch(() => {});
+      if (caps.torch) {
+        let on = false;
+        torch.hidden = false;
+        torch.onclick = async () => { try { await track.applyConstraints({ advanced: [{ torch: !on }] }); on = !on; } catch (e) { status("Licht nicht schaltbar: " + (e.message || e), "err"); } };
+      }
+      try { await video.play(); } catch (e) { return status("Video konnte nicht gestartet werden: " + (e.message || e), "err"); }
+      status("Detektor wird geladen \u2026");
+      const det = await this._makeDetect();
+      if (!alive()) return;
+      this._detector = det.name;
+      status("Suche Code \u2026 den DataMatrix-Code (oder PZN-Strichcode) ruhig ins Bild halten.");
+      const tick = async () => {
+        if (!alive()) return;
+        let code;
+        if (video.readyState >= 2 && video.videoWidth) { try { code = await det.run(video); } catch (e) { /* naechster Frame */ } }
+        if (!alive()) return;
+        if (code) { status("Code erkannt", "ok"); this._onCode(code); return; }
+        this._timer = setTimeout(tick, 150);
+      };
+      tick();
     } catch (e) {
-      st.className = "err"; st.textContent = "Kamera-Fehler: " + (e.message || e) + ". Eingabe von Hand geht.";
+      if (alive()) status("Kamera-Fehler: " + (e.message || e) + ". Eingabe von Hand geht.", "err");
     }
   }
 

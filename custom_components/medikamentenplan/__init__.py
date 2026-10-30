@@ -23,7 +23,7 @@ async def async_setup(hass: HomeAssistant, config) -> bool:
     await async_setup_services(hass)
     www = Path(__file__).parent / "www"
     await hass.http.async_register_static_paths([StaticPathConfig(f"/{DOMAIN}", str(www), cache_headers=False)])
-    add_extra_js_url(hass, f"{JS_URL}?v=1.6.2")
+    add_extra_js_url(hass, f"{JS_URL}?v=1.6.3")
     return True
 
 
