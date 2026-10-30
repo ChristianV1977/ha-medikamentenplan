@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.0 (2026-10-30)
+- **"Neue Packung angefangen"** entscheidet selbst: Ist Vorrat da, wird die Packung mit dem fruehesten Verfall aus dem Vorrat angebrochen (deren Packungsgroesse, Vorrat minus 1). Ohne Vorrat gilt sie als neu gekauft (Anbruch heute, Bestand = Packungsgroesse x Anzahl). Eine persistent_notification nennt den eingetretenen Fall.
+- **Neuer Button** `button.medikament_*_auf_vorrat_legen` ("Packung auf Vorrat legen"): bucht Anzahl Packungen x Packungsgroesse aus den Popup-Feldern ohne Scan auf Vorrat (Verfall unbekannt), danach Anzahl = 1. Kein Verfall-Datumsfeld (bewusst weggelassen).
+- **Entfernt:** Button-Entity `*_aus_vorrat_anbrechen` (Registry-Eintrag nach dem Neustart entfernen). Der Service `medikamentenplan.aus_vorrat_anbrechen` bleibt.
+- **Scan-Dialog "Jetzt anfangen"** bleibt unveraendert: die gescannte Packung wird angefangen, nicht aus dem Vorrat genommen.
+
 ## 1.6.4 (2026-10-30)
 - Scanner-Karte: Vorschau inline in der Karte (kein Overlay mehr), Zustandsmaschine (idle/starting/scanning/found/error), `set hass` speichert nur. Jeder Stop schreibt Status mit Grund, Track-ended und Entfernen der Karte (3 s Gnadenfrist bei Neuaufbau) werden angezeigt, eingeklapptes Debug-Log mit den letzten 10 Ereignissen.
 

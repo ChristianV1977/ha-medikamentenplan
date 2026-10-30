@@ -146,6 +146,14 @@ def take_stock(med: dict) -> tuple[dict, dict]:
     return {**med, "vorrat": vor}, pack
 
 
+def open_pack(med: dict, start: date, packs: int = 1) -> tuple[dict, str]:
+    """Neue Packung angefangen: Vorrat da -> fruehste Verfallspackung anbrechen ('vorrat'), sonst frisch gekauft ('neu')."""
+    if med.get("vorrat"):
+        m, pack = take_stock(med)
+        return new_pack(m, start, 1, None, pack.get("groesse")), "vorrat"
+    return new_pack(med, start, packs), "neu"
+
+
 def remove_last_stock(med: dict) -> dict:
     if not med.get("vorrat"):
         raise ValueError("Kein Vorrat vorhanden.")

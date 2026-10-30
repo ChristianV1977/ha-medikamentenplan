@@ -78,3 +78,20 @@ def test_serial_cap():
     for i in range(calc.MAX_SERIALS + 5):
         s = calc.remember_serial(s, f"k|{i}", T)
     assert len(s) == calc.MAX_SERIALS and "k|0" not in s and f"k|{calc.MAX_SERIALS + 4}" in s
+
+
+def test_open_pack_with_stock_takes_earliest():
+    med = calc.add_stock(calc.add_stock(BASE, 30, "2027-09-01"), 50, "2027-03-01")
+    m, fall = calc.open_pack(med, date(2026, 11, 1), packs=3)
+    assert fall == "vorrat" and len(m["vorrat"]) == 1 and m["vorrat"][0]["groesse"] == 30
+    assert m["anbruch"] == "2026-11-01" and m["packungsgroesse"] == 50  # fruehester Verfall (50er), 1 Packung
+
+
+def test_open_pack_without_stock_is_new_purchase():
+    m, fall = calc.open_pack(BASE, date(2026, 11, 1), packs=2)
+    assert fall == "neu" and m.get("vorrat", []) == [] and m["anbruch"] == "2026-11-01"
+
+
+def test_add_stock_count_without_expiry():
+    m = calc.add_stock(BASE, 20, None, None, anzahl=3)
+    assert len(m["vorrat"]) == 3 and all(p == {"groesse": 20} for p in m["vorrat"])

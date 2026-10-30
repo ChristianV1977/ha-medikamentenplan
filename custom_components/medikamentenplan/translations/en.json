@@ -185,8 +185,8 @@
    "neue_packung": {
     "name": "New pack opened"
    },
-   "aus_vorrat_anbrechen": {
-    "name": "Open pack from stock"
+   "auf_vorrat_legen": {
+    "name": "Put pack on stock"
    }
   },
   "select": {

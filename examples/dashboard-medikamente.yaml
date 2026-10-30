@@ -78,18 +78,28 @@ views:
                           attributes:
                             reichweite_entity: this.entity_id
                           options:
-                            type: button
+                            type: tile
                             name: Neue Packung angefangen
                             icon: mdi:package-variant-closed-plus
-                            show_state: false
-                            icon_height: 36px
+                            vertical: false
+                            hide_state: true
                             tap_action:
-                              action: perform-action
-                              perform_action: button.press
-                              target:
-                                entity_id: this.entity_id
+                              action: toggle
                               confirmation:
-                                text: Neue Packung jetzt anbrechen? Anbruch = heute, Bestand = Packungsgröße × Anzahl.
+                                text: Neue Packung anbrechen? Ist Vorrat vorhanden, wird eine Vorratspackung genommen, sonst gilt eine neu gekaufte Packung.
+                        - entity_id: button.*_auf_vorrat_legen
+                          attributes:
+                            reichweite_entity: this.entity_id
+                          options:
+                            type: tile
+                            name: Auf Vorrat legen
+                            icon: mdi:package-variant-plus
+                            vertical: false
+                            hide_state: true
+                            tap_action:
+                              action: toggle
+                              confirmation:
+                                text: Die eingestellte Anzahl Packungen (Packungsgröße wie oben) auf Vorrat legen?
             hold_action:
               action: more-info
           attributes:
@@ -172,4 +182,3 @@ views:
 
 
         </details>'
-

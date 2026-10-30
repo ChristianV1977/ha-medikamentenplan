@@ -20,18 +20,22 @@ def popup():
     rows = [{"entity_id": f"{d}.*_{k}", "attributes": LINK, "options": {"name": n}}
             for d, k, n in (("select", "hersteller", "Hersteller"), ("number", "packungsgrosse", "Packungsgröße"),
                             ("number", "anzahl_packungen", "Anzahl Packungen"))]
-    button = {"entity_id": "button.*_neue_packung_angefangen", "attributes": LINK, "options": {
-        "type": "button", "name": "Neue Packung angefangen", "icon": "mdi:package-variant-closed-plus",
-        "show_state": False, "icon_height": "36px",
-        "tap_action": {"action": "perform-action", "perform_action": "button.press",
-                       "target": {"entity_id": R},
-                       "confirmation": {"text": "Neue Packung jetzt anbrechen? Anbruch = heute, Bestand = Packungsgröße × Anzahl."}}}}
+    def tile(key, name, icon, text):
+        # tile + toggle: button.press mit R als Ziel wuerde auto-entities auf den Reichweite-Sensor umbiegen
+        return {"entity_id": f"button.*_{key}", "attributes": LINK, "options": {
+            "type": "tile", "name": name, "icon": icon, "vertical": False, "hide_state": True,
+            "tap_action": {"action": "toggle", "confirmation": {"text": text}}}}
+    buttons = [
+        tile("neue_packung_angefangen", "Neue Packung angefangen", "mdi:package-variant-closed-plus",
+             "Neue Packung anbrechen? Ist Vorrat vorhanden, wird eine Vorratspackung genommen, sonst gilt eine neu gekaufte Packung."),
+        tile("auf_vorrat_legen", "Auf Vorrat legen", "mdi:package-variant-plus",
+             "Die eingestellte Anzahl Packungen (Packungsgröße wie oben) auf Vorrat legen?")]
     return {"type": "vertical-stack", "cards": [
         {"type": "markdown", "content": "### {{ state_attr('this.entity_id','name') }}"},
         {"type": "custom:auto-entities", "show_empty": False,
          "card": {"type": "entities", "show_header_toggle": False}, "filter": {"include": rows}},
         {"type": "custom:auto-entities", "show_empty": False, "card_param": "cards",
-         "card": {"type": "grid", "columns": 1, "square": False}, "filter": {"include": [button]}}]}
+         "card": {"type": "grid", "columns": 1, "square": False}, "filter": {"include": buttons}}]}
 
 
 def vorrat():

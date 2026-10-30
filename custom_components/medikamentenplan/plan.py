@@ -94,6 +94,15 @@ class Plan:
         await self.async_update(med_id, calc.new_pack(med, start or dt_util.now().date(), 1, None, groesse))
         self.packs.pop(med_id, None)
 
+    async def async_open_pack(self, med_id: str) -> str:
+        """Button-Logik: Vorrat vorhanden -> daraus, sonst neu gekaufte Packung. Gibt 'vorrat' oder 'neu' zurueck."""
+        if self.meds[med_id].get("abgesetzt"):
+            raise ServiceValidationError("Medikament ist abgesetzt - zuerst reaktivieren.")
+        med, fall = calc.open_pack(self.meds[med_id], dt_util.now().date(), self.packs.get(med_id, 1))
+        await self.async_update(med_id, med)
+        self.packs.pop(med_id, None)
+        return fall
+
     async def async_remove_last_stock(self, med_id: str) -> None:
         try:
             await self.async_update(med_id, calc.remove_last_stock(self.meds[med_id]))
