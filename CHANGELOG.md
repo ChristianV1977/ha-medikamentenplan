@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.7.2 (2026-10-30)
+- Scanner-Karte (Script 1.6.6): neue Option `camera: user | environment` (Standard environment). `user` nimmt die Frontkamera (facingMode ideal user), Retry-Kette: user mit Aufloesung, user ohne, Geraete mit Label front/vorder/user (oder `camera_label`, Teilstring), dann video:true. Vorschau wird gespiegelt, die Erkennung liest den ungespiegelten Frame. Debug-Log nennt Geraet und facingMode.
+
 ## 1.7.1 (2026-10-30)
 - Scanner-Karte (Script 1.6.5): Kamera-Start mit Retry-Kette bei NotReadable/Overconstrained/Abort (environment ohne Aufloesung, ohne facingMode, video:true, jede videoinput-deviceId einzeln), jeder Versuch im Debug-Log, Hinweis "Kamera evtl. von anderer App belegt".
 - Neue optionale Kartenoption `pause_fully_motion: <switch-Entity der Fully-Bewegungserkennung>`: schaltet sie vor dem Kamerastart aus (1,8 s Wartezeit) und nach jedem Ende wieder ein (Code erkannt, Abbrechen, Fehler, Zeitueberschreitung 120 s, Karte entfernt, pagehide/Ausblenden).

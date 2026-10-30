@@ -23,6 +23,7 @@ button.warn{background:var(--error-color,#c62828)}
 .log{font-size:.75em;opacity:.8}.log pre{white-space:pre-wrap;margin:4px 0 0}
 .panel{background:var(--card-background-color,#222);color:var(--primary-text-color,#fff);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px}
 video{width:100%;max-height:55vh;border-radius:14px;background:#000;object-fit:cover}
+.mirror{transform:scaleX(-1)}
 .row{display:flex;gap:10px;flex-wrap:wrap}.row>button{flex:1;min-width:130px}
 input,select{font:inherit;padding:12px;border-radius:10px;border:1px solid var(--divider-color,#666);background:var(--secondary-background-color,#333);color:var(--primary-text-color,#fff);width:100%;box-sizing:border-box}
 h3{margin:0}.muted{opacity:.7;font-size:.9em}.err{color:var(--error-color,#ff8a80)}.ok{color:var(--success-color,#81c784)}
@@ -159,7 +160,11 @@ class MedikamentenplanScanCard extends HTMLElement {
   // Kamera oeffnen; bei NotReadable/Overconstrained/Abort mit gelockerten Constraints erneut (je Versuch ein Log-Eintrag)
   async _openCamera(alive) {
     const md = navigator.mediaDevices;
-    const tries = [
+    const user = this._config?.camera === "user";
+    const tries = user ? [  // Frontkamera (Wand-Tablet): facingMode ideal user, Geraetewahl nach Label
+      ["user+1080p", { facingMode: { ideal: "user" }, width: { ideal: 1920 }, height: { ideal: 1080 } }],
+      ["user", { facingMode: { ideal: "user" } }],
+    ] : [
       ["environment+1080p", { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } }],
       ["environment", { facingMode: { ideal: "environment" } }],
       ["ohne facingMode", {}],
@@ -167,12 +172,17 @@ class MedikamentenplanScanCard extends HTMLElement {
     ];
     let last, enumerated = false;
     for (let i = 0; i < tries.length || !enumerated; i++) {
-      if (i >= tries.length) {  // letzte Stufe: jede videoinput-deviceId einzeln
+      if (i >= tries.length) {  // letzte Stufe: Geraete einzeln per deviceId
         enumerated = true;
         let devs = [];
         try { devs = (await md.enumerateDevices()).filter((d) => d.kind === "videoinput"); } catch (e) { this._log("enumerateDevices: " + (e.name || e)); }
         this._log("Kameras: " + (devs.map((d) => d.label || d.deviceId.slice(0, 8)).join(", ") || "keine"));
-        devs.forEach((d) => tries.push(["Geraet " + (d.label || d.deviceId.slice(0, 8)), { deviceId: { exact: d.deviceId } }]));
+        if (user) {
+          const cl = (this._config?.camera_label || "").toLowerCase();
+          devs.filter((d) => (cl ? (d.label || "").toLowerCase().includes(cl) : /front|vorder|user/i.test(d.label || "")))
+            .forEach((d) => tries.push(["Geraet " + (d.label || d.deviceId.slice(0, 8)), { deviceId: { exact: d.deviceId } }]));
+          tries.push(["video:true", true]);
+        } else devs.forEach((d) => tries.push(["Geraet " + (d.label || d.deviceId.slice(0, 8)), { deviceId: { exact: d.deviceId } }]));
         if (i >= tries.length) break;
       }
       const [name, video] = tries[i];
@@ -186,14 +196,16 @@ class MedikamentenplanScanCard extends HTMLElement {
         continue;
       }
       if (!alive()) { s.getTracks().forEach((t) => t.stop()); this._log("Stream verworfen (Ansicht wurde ersetzt)"); return null; }
-      this._log("getUserMedia ok (" + name + ", " + (s.getVideoTracks()[0]?.label || "?") + ")");
+      const tk = s.getVideoTracks()[0];
+      this._log("getUserMedia ok (" + name + ", " + (tk?.label || "?") + ", facingMode " + (tk?.getSettings?.().facingMode || "unbekannt") + ")");
       return s;
     }
     throw last;
   }
 
   async _scanView(msg = "") {
-    const video = h("video", { autoplay: true, playsinline: true, muted: true });
+    // Frontkamera nur in der Anzeige spiegeln; Erkennung liest den ungespiegelten Frame
+    const video = h("video", { autoplay: true, playsinline: true, muted: true, class: this._config?.camera === "user" ? "mirror" : null });
     video.muted = true;
     const st = (this._st = h("div", { class: "muted", text: "Kamera wird gestartet \u2026" }));
     const man = h("input", { inputmode: "numeric", placeholder: "oder PZN / Code von Hand eingeben" });
