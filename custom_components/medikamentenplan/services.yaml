@@ -28,3 +28,109 @@ neue_packung:
           max: 10000
           step: any
           mode: box
+
+scan_code:
+  fields:
+    code:
+      required: true
+      selector:
+        text:
+
+scan_abbrechen:
+
+vorrat_hinzufuegen:
+  fields:
+    code:
+      required: true
+      selector:
+        text:
+    entity_id:
+      required: false
+      selector:
+        entity:
+          integration: medikamentenplan
+          domain: sensor
+    packungsgroesse:
+      required: false
+      selector:
+        number:
+          min: 0.01
+          max: 10000
+          step: any
+          mode: box
+    anzahl_packungen:
+      required: false
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 20
+          mode: box
+
+packung_anfangen:
+  fields:
+    code:
+      required: true
+      selector:
+        text:
+    entity_id:
+      required: false
+      selector:
+        entity:
+          integration: medikamentenplan
+          domain: sensor
+    packungsgroesse:
+      required: false
+      selector:
+        number:
+          min: 0.01
+          max: 10000
+          step: any
+          mode: box
+    anbruchdatum:
+      required: false
+      selector:
+        date:
+
+pzn_zuordnen:
+  fields:
+    code:
+      required: true
+      selector:
+        text:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          integration: medikamentenplan
+          domain: sensor
+    packungsgroesse:
+      required: false
+      selector:
+        number:
+          min: 0.01
+          max: 10000
+          step: any
+          mode: box
+
+aus_vorrat_anbrechen:
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          integration: medikamentenplan
+          domain: sensor
+    anbruchdatum:
+      required: false
+      selector:
+        date:
+
+vorrat_entfernen:
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          integration: medikamentenplan
+          domain: sensor

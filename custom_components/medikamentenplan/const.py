@@ -3,6 +3,7 @@ STORAGE_VERSION = 1
 PLATFORMS = ["sensor", "button", "select", "number"]
 SIGNAL_UPDATE = f"{DOMAIN}_update_{{}}"
 SIGNAL_NEW = f"{DOMAIN}_new_{{}}"
+SIGNAL_SCAN = f"{DOMAIN}_scan"
 
 FORMS = ["tablette", "retardtablette", "filmtablette", "brausetablette", "schmelztablette", "kautablette", "magensaftresistente_tablette", "kapsel", "hartkapsel", "magensaftresistente_hartkapsel", "weichkapsel", "retardkapsel", "tropfen", "augentropfen", "saft", "spray", "nasenspray", "dosieraerosol", "inhalator_pulver", "salbe", "pflaster", "zaepfchen", "spritze", "pulver", "sonstige"]
 MODES = ["taeglich", "intervall", "bedarf"]

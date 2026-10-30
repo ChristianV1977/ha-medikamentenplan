@@ -63,9 +63,29 @@ def stock_at_start(med: dict) -> float:
     return float(rest or 0)
 
 
+VERFALL_WARN_TAGE = 60
+
+
+def pack_units(med: dict, pack: dict) -> float:
+    return float(pack.get("groesse") or med.get("packungsgroesse") or 0)
+
+
+def stock_units(med: dict) -> float:
+    return sum(pack_units(med, p) for p in med.get("vorrat", []))
+
+
+def earliest_expiry(med: dict) -> date | None:
+    ds = [parse_date(p.get("verfall")) for p in med.get("vorrat", [])]
+    ds = [d for d in ds if d]
+    return min(ds) if ds else None
+
+
 def compute(med: dict, today: date) -> dict:
-    """Reichweite, Aufbrauch-/Nachbestelldatum, verbleibende Tage und Status."""
+    """Reichweite, Aufbrauch-/Nachbestelldatum, verbleibende Tage und Status.
+    reichweite_tage/verbleibende_tage/aufbrauchdatum gelten fuer die angebrochene Packung (kompatibel);
+    nachbestelldatum und status rechnen den Vorrat (ungeoeffnete Packungen) mit, *_inkl_vorrat getrennt."""
     use = daily_use(med)
+    exp = earliest_expiry(med)
     out = {
         "tagesverbrauch": round(use, 4),
         "einnahmeschema": schema_text(med) if med.get("modus", MODE_DAILY) != MODE_PRN else "",
@@ -74,6 +94,12 @@ def compute(med: dict, today: date) -> dict:
         "nachbestelldatum": None,
         "verbleibende_tage": None,
         "status": STATUS_OK,
+        "vorrat_packungen": len(med.get("vorrat", [])),
+        "vorrat_einheiten": round(stock_units(med), 2),
+        "reichweite_inkl_vorrat_tage": None,
+        "aufbrauchdatum_inkl_vorrat": None,
+        "naechster_verfall": exp,
+        "verfall_warnung": bool(exp and (exp - today).days <= VERFALL_WARN_TAGE),
     }
     if med.get("abgesetzt"):  # keine Reichweite/Ampel, kein Nachbestelldatum
         out.update(einnahmeschema="", status=STATUS_STOPPED)
@@ -83,18 +109,67 @@ def compute(med: dict, today: date) -> dict:
     start = parse_date(med.get("anbruch")) or today
     range_days = stock_at_start(med) / use
     runout = start + timedelta(days=int(range_days))  # ganze Tage, abgerundet
-    reorder = runout - timedelta(days=int(med.get("vorlauf_tage", 7) or 0))
+    total_days = range_days + stock_units(med) / use
+    total_runout = start + timedelta(days=int(total_days))
+    reorder = total_runout - timedelta(days=int(med.get("vorlauf_tage", 7) or 0))
     out.update(
         reichweite_tage=round(range_days, 2),
         aufbrauchdatum=runout,
         nachbestelldatum=reorder,
         verbleibende_tage=max(0, (runout - today).days),
+        reichweite_inkl_vorrat_tage=max(0, (total_runout - today).days),
+        aufbrauchdatum_inkl_vorrat=total_runout,
     )
-    if today >= runout:
+    if today >= total_runout:
         out["status"] = STATUS_EMPTY
     elif today >= reorder:
         out["status"] = STATUS_REORDER
     return out
+
+
+def add_stock(med: dict, groesse: float | None, verfall=None, charge=None, anzahl: int = 1) -> dict:
+    """Ungeoeffnete Packung(en) auf Vorrat legen."""
+    med = dict(med)
+    pack = {k: v for k, v in (("groesse", groesse), ("verfall", verfall.isoformat() if hasattr(verfall, "isoformat") else verfall),
+                              ("charge", charge)) if v}
+    med["vorrat"] = [*med.get("vorrat", []), *[dict(pack) for _ in range(max(1, int(anzahl)))]]
+    return med
+
+
+def take_stock(med: dict) -> tuple[dict, dict]:
+    """Eine Packung aus dem Vorrat nehmen: die mit dem fruehesten Verfall zuerst (ohne Verfall zuletzt)."""
+    vor = list(med.get("vorrat", []))
+    if not vor:
+        raise ValueError("Kein Vorrat vorhanden.")
+    i = min(range(len(vor)), key=lambda k: (parse_date(vor[k].get("verfall")) or date.max, k))
+    pack = vor.pop(i)
+    return {**med, "vorrat": vor}, pack
+
+
+def remove_last_stock(med: dict) -> dict:
+    if not med.get("vorrat"):
+        raise ValueError("Kein Vorrat vorhanden.")
+    return {**med, "vorrat": med["vorrat"][:-1]}
+
+
+MAX_SERIALS = 5000
+
+
+def migrate_store(data: dict | None) -> dict:
+    """Store-Schema 2: Vorrat je Medikament, PZN-Zuordnung, gebuchte Seriennummern. Idempotent, verliert nichts."""
+    data = dict(data or {})
+    data["meds"] = {k: {**m, "vorrat": m.get("vorrat", [])} for k, m in (data.get("meds") or {}).items()}
+    data.setdefault("pzn", {})
+    data.setdefault("serials", {})
+    data["schema"] = 2
+    return data
+
+
+def remember_serial(serials: dict, key: str, today: date) -> dict:
+    serials = {**serials, key: today.isoformat()}
+    while len(serials) > MAX_SERIALS:
+        serials.pop(next(iter(serials)))
+    return serials
 
 
 def new_pack(med: dict, start: date, packs: int = 1, hersteller: str | None = None,

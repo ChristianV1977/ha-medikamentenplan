@@ -22,17 +22,22 @@ class Plan:
         self.store = Store(hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}")
         self.meds: dict[str, dict] = {}
         self.packs: dict[str, int] = {}  # Vorgabe Anzahl Packungen je Medikament, nur im Speicher
+        self.pzn: dict[str, dict] = {}  # PZN -> {"med": med_id, "groesse": float|None}
+        self.serials: dict[str, str] = {}  # gebuchte Seriennummern "pzn|serial" -> Datum
 
     @property
     def name(self) -> str:
         return self.entry.title
 
     async def async_load(self) -> None:
-        data = await self.store.async_load()
-        self.meds = (data or {}).get("meds", {})
+        raw = await self.store.async_load()
+        data = calc.migrate_store(raw)
+        self.meds, self.pzn, self.serials = data["meds"], data["pzn"], data["serials"]
+        if raw is not None and raw.get("schema") != 2:
+            await self._save()  # Migration auf Schema 2 persistieren (Backup liegt vorher)
 
     async def _save(self) -> None:
-        await self.store.async_save({"meds": self.meds})
+        await self.store.async_save({"schema": 2, "meds": self.meds, "pzn": self.pzn, "serials": self.serials})
 
     def compute(self, med_id: str) -> dict:
         return calc.compute(self.meds[med_id], dt_util.now().date())
@@ -61,6 +66,7 @@ class Plan:
 
     async def async_delete(self, med_id: str) -> None:
         self.meds.pop(med_id, None)
+        self.pzn = {k: v for k, v in self.pzn.items() if v.get("med") != med_id}
         await self._save()
         reg = dr.async_get(self.hass)
         if dev := reg.async_get_device_by_identifier((DOMAIN, f"{self.entry.entry_id}_{med_id}"), self.entry.entry_id):
@@ -72,6 +78,36 @@ class Plan:
         start = start or dt_util.now().date()
         await self.async_update(med_id, calc.new_pack(self.meds[med_id], start, packs, hersteller, packungsgroesse))
         self.packs.pop(med_id, None)
+
+    async def async_add_stock(self, med_id: str, groesse=None, verfall=None, charge=None, anzahl: int = 1) -> None:
+        await self.async_update(med_id, calc.add_stock(self.meds[med_id], groesse, verfall, charge, anzahl))
+
+    async def async_from_stock(self, med_id: str, start=None) -> None:
+        """Aelteste (Verfall) Packung aus dem Vorrat anbrechen."""
+        if self.meds[med_id].get("abgesetzt"):
+            raise ServiceValidationError("Medikament ist abgesetzt - zuerst reaktivieren.")
+        try:
+            med, pack = calc.take_stock(self.meds[med_id])
+        except ValueError as e:
+            raise ServiceValidationError(str(e)) from e
+        groesse = pack.get("groesse")
+        await self.async_update(med_id, calc.new_pack(med, start or dt_util.now().date(), 1, None, groesse))
+        self.packs.pop(med_id, None)
+
+    async def async_remove_last_stock(self, med_id: str) -> None:
+        try:
+            await self.async_update(med_id, calc.remove_last_stock(self.meds[med_id]))
+        except ValueError as e:
+            raise ServiceValidationError(str(e)) from e
+
+    async def async_learn_pzn(self, pzn: str, med_id: str, groesse=None) -> None:
+        old = self.pzn.get(pzn, {})
+        self.pzn[pzn] = {"med": med_id, "groesse": groesse if groesse is not None else old.get("groesse")}
+        await self._save()
+
+    async def async_book_serial(self, key: str) -> None:
+        self.serials = calc.remember_serial(self.serials, key, dt_util.now().date())
+        await self._save()
 
     def notify(self) -> None:
         async_dispatcher_send(self.hass, SIGNAL_UPDATE.format(self.entry.entry_id))

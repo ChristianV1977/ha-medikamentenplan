@@ -1,12 +1,30 @@
 """Medikamentenplan: reine Uebersicht (Reichweite/Nachbestellung), Daten nur lokal im HA Store."""
 from __future__ import annotations
 
+from pathlib import Path
+
+from homeassistant.components.frontend import add_extra_js_url
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.event import async_track_time_change
 
 from .const import DOMAIN, PLATFORMS
 from .plan import Plan
+from .services import async_setup_services
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+JS_URL = f"/{DOMAIN}/medikamentenplan-scanner.js"
+
+
+async def async_setup(hass: HomeAssistant, config) -> bool:
+    """Domainweite Services und die Scanner-Karte (lokal ausgeliefert, inkl. ZXing, kein CDN)."""
+    await async_setup_services(hass)
+    www = Path(__file__).parent / "www"
+    await hass.http.async_register_static_paths([StaticPathConfig(f"/{DOMAIN}", str(www), cache_headers=False)])
+    add_extra_js_url(hass, f"{JS_URL}?v=1.6.0")
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry) -> bool:

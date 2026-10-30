@@ -17,6 +17,17 @@ Danach: Einstellungen > Geräte & Dienste > Integration hinzufügen > "Medikamen
 
 Service `medikamentenplan.neue_packung` (Ziel: Reichweite-Sensor): optional `anbruchdatum`, `anzahl_packungen`, `hersteller`, `packungsgroesse`; nicht angegebene Felder bleiben unverändert. Je Medikament gibt es `select.*_hersteller` (Pulldown aus Herstellerkatalog; freie Werte weiter über den Options-Dialog), `number.*_packungsgrosse` und `number.*_anzahl_packungen` (Änderung von Hersteller/Größe wird sofort gespeichert, Anzahl ist nur die Vorgabe für die nächste Packung). Der Button "Neue Packung angefangen" setzt Anbruch = heute und Bestand = Packungsgröße × Anzahl Packungen (danach wieder 1); für Abgesetzte sind die Felder unavailable.
 
+## Packungen scannen und Vorrat (ab 1.6.0)
+
+Karte `custom:medikamentenplan-scan-card` (wird von der Integration automatisch geladen) in ein Dashboard einfügen: `type: custom:medikamentenplan-scan-card`, optional `name:`. Tippen öffnet die Kamera (HTTPS und Kamera-Erlaubnis nötig; Companion-App oder Browser), erkannt werden der DataMatrix-Code (securPharm) und der PZN-Strichcode. Die Dekodierung läuft lokal (ZXing wird mitgeliefert), es gibt keine Abfrage im Internet.
+
+- **Bekannte PZN:** Dialog "Auf Vorrat legen" (ungeöffnet, mit Verfall/Charge aus dem Code) oder "Jetzt anfangen" (wie "Neue Packung angefangen", Packungsgröße aus der Zuordnung).
+- **Unbekannte PZN:** Medikament aus der Liste wählen, optional Packungsgröße; die Zuordnung PZN zu Medikament wird gemerkt (Name steckt nicht im Code).
+- **Doppelscan:** dieselbe Seriennummer wird abgelehnt.
+- **Vorrat:** `sensor.*_vorrat_packungen`, `sensor.*_reichweite_inkl_vorrat_tage`, `sensor.*_vorrat_verfall`, Button `*_aus_vorrat_anbrechen` (Packung mit frühestem Verfall zuerst). `nachbestelldatum` und `status` rechnen den Vorrat mit; `reichweite`/`verbleibende_tage` gelten weiter für die angebrochene Packung. Attribut `verfall_warnung` ab 60 Tagen vor Verfall.
+- **Services** (alle mit Antwort, Details in den Entwicklerwerkzeugen): `scan_code`, `vorrat_hinzufuegen`, `packung_anfangen`, `pzn_zuordnen`, `aus_vorrat_anbrechen`, `vorrat_entfernen`, `scan_abbrechen`. Für Automationen reicht z. B. ein Barcode-Scanner, der `medikamentenplan.vorrat_hinzufuegen` mit `code` aufruft.
+- Grenzen: GS1-Codes ohne deutsche PZN (4150-Präfix) werden über die GTIN zugeordnet; die zwei Prüfziffern der PPN (mod 97) werden nicht geprüft, nur die PZN-Prüfziffer.
+
 ## Dashboard
 
 Beispiel mit auto-entities (HACS) und Mushroom: Vorratskarten über `filter.include` (`integration: medikamentenplan`, `entity_id: sensor.*_reichweite_tage_verbleibend`), abgesetzte per `exclude` mit `attributes: {status: abgesetzt}` ausblenden. Für "Neue Packung" mit Rückfrage Tipp-Aktion `browser_mod.popup` mit den drei Feldern und dem Button verwenden. Für den Einnahmeplan stehen die Attribute `morgens`/`mittags`/`abends`/`nachts` am Reichweite-Sensor bereit.

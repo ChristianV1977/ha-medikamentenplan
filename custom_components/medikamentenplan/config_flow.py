@@ -198,6 +198,7 @@ class MedOptionsFlow(OptionsFlow):
         if errors := self._validate(med):
             self._prefill = user_input
             return await self._form("edit_form", errors)
+        med["vorrat"] = self.plan.meds[self._med_id].get("vorrat", [])  # Vorrat gehoert nicht ins Formular
         await self.plan.async_update(self._med_id, med)
         return self.async_create_entry(data={})
 

@@ -216,11 +216,30 @@
      "aufgebraucht": "Aufgebraucht",
      "abgesetzt": "Abgesetzt"
     }
+   },
+   "vorrat_packungen": {
+    "name": "Stock (packs)"
+   },
+   "reichweite_inkl_vorrat": {
+    "name": "Range incl. stock (days)"
+   },
+   "vorrat_verfall": {
+    "name": "Stock expiry"
+   },
+   "scan_zustand": {
+    "name": "Scan state",
+    "state": {
+     "bereit": "Ready",
+     "zuordnung_noetig": "Assignment needed"
+    }
    }
   },
   "button": {
    "neue_packung": {
     "name": "Neue Packung angefangen"
+   },
+   "aus_vorrat_anbrechen": {
+    "name": "Open pack from stock"
    }
   },
   "text": {
@@ -257,6 +276,107 @@
     "packungsgroesse": {
      "name": "Packungsgröße",
      "description": "Leer lassen = unverändert"
+    }
+   }
+  },
+  "scan_code": {
+   "name": "Code prüfen",
+   "description": "Liest den Code, meldet Medikament/Zuordnungsbedarf/Doppelscan (ändert nichts)",
+   "fields": {
+    "code": {
+     "name": "Code",
+     "description": "Roher Inhalt des Packungscodes (DataMatrix oder PZN-Strichcode)"
+    }
+   }
+  },
+  "scan_abbrechen": {
+   "name": "Scan verwerfen",
+   "description": "Setzt den Scan-Zustand zurück",
+   "fields": {}
+  },
+  "vorrat_hinzufuegen": {
+   "name": "Auf Vorrat legen",
+   "description": "Bucht die gescannte Packung ungeöffnet in den Vorrat",
+   "fields": {
+    "code": {
+     "name": "Code",
+     "description": "Roher Inhalt des Packungscodes (DataMatrix oder PZN-Strichcode)"
+    },
+    "entity_id": {
+     "name": "Medikament",
+     "description": "Sensor des Medikaments (nötig bei unbekannter PZN; lernt die PZN)"
+    },
+    "packungsgroesse": {
+     "name": "Packungsgröße",
+     "description": "Einheiten pro Packung (leer = gelernter Wert bzw. Standard)"
+    },
+    "anzahl_packungen": {
+     "name": "Anzahl Packungen",
+     "description": "Anzahl gleicher Packungen"
+    }
+   }
+  },
+  "packung_anfangen": {
+   "name": "Packung anfangen",
+   "description": "Bucht die gescannte Packung als angebrochen (Anbruch heute)",
+   "fields": {
+    "code": {
+     "name": "Code",
+     "description": "Roher Inhalt des Packungscodes (DataMatrix oder PZN-Strichcode)"
+    },
+    "entity_id": {
+     "name": "Medikament",
+     "description": "Sensor des Medikaments (nötig bei unbekannter PZN; lernt die PZN)"
+    },
+    "packungsgroesse": {
+     "name": "Packungsgröße",
+     "description": "Einheiten pro Packung (leer = gelernter Wert bzw. Standard)"
+    },
+    "anbruchdatum": {
+     "name": "Anbruchdatum",
+     "description": "Standard: heute"
+    }
+   }
+  },
+  "pzn_zuordnen": {
+   "name": "PZN zuordnen",
+   "description": "Ordnet die PZN aus dem Code einem Medikament zu",
+   "fields": {
+    "code": {
+     "name": "Code",
+     "description": "Roher Inhalt des Packungscodes (DataMatrix oder PZN-Strichcode)"
+    },
+    "entity_id": {
+     "name": "Medikament",
+     "description": "Sensor des Medikaments (nötig bei unbekannter PZN; lernt die PZN)"
+    },
+    "packungsgroesse": {
+     "name": "Packungsgröße",
+     "description": "Einheiten pro Packung (leer = gelernter Wert bzw. Standard)"
+    }
+   }
+  },
+  "aus_vorrat_anbrechen": {
+   "name": "Aus Vorrat anbrechen",
+   "description": "Bricht die Packung mit dem frühesten Verfall an",
+   "fields": {
+    "entity_id": {
+     "name": "Medikament",
+     "description": "Sensor des Medikaments (nötig bei unbekannter PZN; lernt die PZN)"
+    },
+    "anbruchdatum": {
+     "name": "Anbruchdatum",
+     "description": "Standard: heute"
+    }
+   }
+  },
+  "vorrat_entfernen": {
+   "name": "Vorrat korrigieren",
+   "description": "Entfernt die zuletzt eingebuchte Vorratspackung",
+   "fields": {
+    "entity_id": {
+     "name": "Medikament",
+     "description": "Sensor des Medikaments (nötig bei unbekannter PZN; lernt die PZN)"
     }
    }
   }
