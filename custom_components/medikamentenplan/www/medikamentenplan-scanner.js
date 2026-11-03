@@ -26,7 +26,7 @@ video{width:100%;max-height:55vh;border-radius:14px;background:#000;object-fit:c
 .mirror{transform:scaleX(-1)}
 .row{display:flex;gap:10px;flex-wrap:wrap}.row>button{flex:1;min-width:130px}
 input,select{font:inherit;padding:12px;border-radius:10px;border:1px solid var(--divider-color,#666);background:var(--secondary-background-color,#333);color:var(--primary-text-color,#fff);width:100%;box-sizing:border-box}
-h3{margin:0}.muted{opacity:.7;font-size:.9em}.err{color:var(--error-color,#ff8a80)}.ok{color:var(--success-color,#81c784)}
+label{display:flex;flex-direction:column;gap:4px}h3{margin:0}.muted{opacity:.7;font-size:.9em}.err{color:var(--error-color,#ff8a80)}.ok{color:var(--success-color,#81c784)}
 `;
 
 // DOM nur per createElement/textContent: keine dynamischen Werte (Code-Inhalt, Namen, Fehlertexte) in innerHTML
@@ -330,3 +330,85 @@ class MedikamentenplanScanCard extends HTMLElement {
 if (!customElements.get("medikamentenplan-scan-card")) customElements.define("medikamentenplan-scan-card", MedikamentenplanScanCard);
 window.customCards = window.customCards || [];
 window.customCards.push({ type: "medikamentenplan-scan-card", name: "Medikamentenplan Scanner", description: "Packungs-Code per Kamera scannen (lokal)" });
+
+/* ---- Pflege-Karte: Medikamente eines Plans ohne Admin-Rechte anlegen, bearbeiten, absetzen, entfernen (Services medikament_*, fester plan) ---- */
+const FORM_LABEL = (v) => v.charAt(0).toUpperCase() + v.slice(1).replace(/_/g, " ");
+const FORMS = ["tablette", "retardtablette", "filmtablette", "brausetablette", "schmelztablette", "kautablette", "magensaftresistente_tablette", "kapsel", "hartkapsel", "magensaftresistente_hartkapsel", "weichkapsel", "retardkapsel", "tropfen", "augentropfen", "saft", "spray", "nasenspray", "dosieraerosol", "inhalator_pulver", "salbe", "pflaster", "zaepfchen", "spritze", "pulver", "sonstige"];
+const FIELDS = [  // [key, Label, Typ, Optionen/Hinweis]
+  ["name", "Name", "text"], ["pzn", "PZN (optional)", "text"],
+  ["darreichungsform", "Darreichungsform", "select", FORMS.map((v) => [v, FORM_LABEL(v)])], ["dosis", "Dosis je Einnahme", "number"], ["einheit", "Einheit", "text"],
+  ["modus", "Einnahme", "select", [["taeglich", "Täglich"], ["intervall", "Alle n Tage"], ["bedarf", "Bei Bedarf"]]],
+  ["morgens", "Morgens", "number"], ["mittags", "Mittags", "number"], ["abends", "Abends", "number"], ["nachts", "Nachts", "number"],
+  ["pro_tag", "Oder pro Tag (ohne Zeitfenster)", "number"], ["intervall_tage", "Intervall (Tage)", "number"], ["bedarf_pro_woche", "Bei Bedarf: pro Woche", "number"],
+  ["packungsgroesse", "Packungsgröße", "number"], ["anbruch", "Packung angefangen am", "date"], ["notiz", "Notiz", "text"]];
+class MedikamentenplanPflegeCard extends HTMLElement {
+  setConfig(config) {
+    if (!config || !config.plan) throw new Error("Option plan fehlt");
+    this._config = config; this._mode = "list";
+    if (!this._root) { this._root = this.attachShadow({ mode: "open" }); this._root.append(h("style", { text: CSS })); this._body = h("div", { class: "box" }); this._root.append(this._body); }
+    this._render();
+  }
+  set hass(hass) {
+    this._hass = hass;
+    if (this._mode === "list") { const sig = this._meds().map((m) => m.id + m.name + m.stopped).join("|"); if (sig !== this._sig) this._render(); }  // Formular nie von aussen neu zeichnen
+  }
+  getCardSize() { return 4; }
+  static getStubConfig() { return { plan: "" }; }
+  _meds() {
+    const s = this._hass ? this._hass.states : {};
+    return Object.keys(s).filter((k) => k.startsWith("sensor.medikament_") && k.endsWith("_reichweite_tage_verbleibend") && s[k].attributes.plan === this._config.plan)
+      .map((k) => ({ id: k, name: s[k].attributes.name || k, stopped: !!s[k].attributes.abgesetzt, a: s[k].attributes })).sort((x, y) => x.name.localeCompare(y.name));
+  }
+  async _svc(service, data) {
+    return (await this._hass.callWS({ type: "call_service", domain: "medikamentenplan", service, service_data: { plan: this._config.plan, ...data }, return_response: true })).response || {};
+  }
+  _render() {
+    this._mode = "list"; const meds = this._meds(); this._sig = meds.map((m) => m.id + m.name + m.stopped).join("|");
+    this._msg = this._msg || h("div", { class: "muted" });
+    this._body.replaceChildren(panel(
+      h("h3", { text: "Medikamente verwalten" }), this._msg,
+      ...meds.map((m) => row(h("div", { class: "muted", text: m.name + (m.stopped ? " (abgesetzt)" : "") }), h("button", { class: "sec", text: "Bearbeiten", onclick: () => this._form(m) }))),
+      h("button", { text: "+ Medikament hinzufügen", onclick: () => this._form(null) })));
+  }
+  _say(t, err) { if (this._msg) { this._msg.textContent = t; this._msg.className = err ? "err" : "ok"; } }
+  _form(med) {
+    this._mode = "form"; const inputs = {}; const a = med ? med.a : {};
+    const start = {};
+    const rows = FIELDS.map(([k, label, type, opts]) => {
+      let el;
+      if (type === "select") { el = h("select", {}); opts.forEach(([v, t]) => el.append(h("option", { value: v, text: t }))); }
+      else el = h("input", { type: type === "number" ? "text" : type, inputmode: type === "number" ? "decimal" : undefined });
+      let v = a[k]; if (!med && k === "anbruch") v = new Date().toLocaleDateString("sv"); if (!med && k === "dosis") v = 1; if (!med && k === "einheit") v = "Stück"; if (!med && k === "modus") v = "taeglich"; if (!med && k === "darreichungsform") v = "tablette";
+      if (v !== undefined && v !== null) el.value = String(v); start[k] = el.value; inputs[k] = el;
+      return h("label", { class: "muted" }, label, el);
+    });
+    const collect = () => {
+      const d = {};
+      for (const [k, , type] of FIELDS) {
+        const raw = inputs[k].value.trim(); if (med && raw === start[k]) continue;  // Bearbeiten: nur Geändertes senden
+        if (raw === "") { if (med && start[k] !== "") d[k] = ""; continue; }
+        d[k] = type === "number" ? parseFloat(raw.replace(",", ".")) : raw;
+      }
+      return d;
+    };
+    const save = async () => {
+      const d = collect();
+      try {
+        if (med) { await this._svc("medikament_bearbeiten", { entity_id: med.id, ...d }); this._msg = h("div", { class: "ok", text: "Gespeichert." }); }
+        else { if (!d.name || !(d.packungsgroesse > 0)) { this._say("Name und Packungsgröße sind Pflicht.", true); return; } await this._svc("medikament_hinzufuegen", d); this._msg = h("div", { class: "ok", text: "Angelegt. Die neuen Einträge erscheinen in wenigen Sekunden." }); }
+        this._render();
+      } catch (e) { this._say("Fehler: " + (e.message || String(e)), true); }
+    };
+    const extra = med ? [
+      row(h("button", { class: "sec", text: med.stopped ? "Wieder aufnehmen" : "Absetzen", onclick: async () => { try { await this._svc("medikament_absetzen", { entity_id: med.id, abgesetzt: !med.stopped }); this._msg = h("div", { class: "ok", text: med.stopped ? "Wieder aufgenommen." : "Abgesetzt." }); this._render(); } catch (e) { this._say("Fehler: " + (e.message || String(e)), true); } } }),
+        (() => { let armed = false; const b = h("button", { class: "warn", text: "Entfernen", onclick: async () => {
+          if (!armed) { armed = true; b.textContent = "Wirklich entfernen? Nochmal tippen"; return; }
+          try { await this._svc("medikament_entfernen", { entity_id: med.id, bestaetigen: true }); this._msg = h("div", { class: "ok", text: "Entfernt." }); this._render(); } catch (e) { this._say("Fehler: " + (e.message || String(e)), true); } } }); return b; })())] : [];
+    this._msg = h("div", { class: "muted" });
+    this._body.replaceChildren(panel(h("h3", { text: med ? med.name + " bearbeiten" : "Neues Medikament" }), this._msg, ...rows,
+      h("div", { class: "muted", text: "Dosis je Zeitfenster eintragen (oder „pro Tag“). Leeres Zeitfenster = keine Einnahme." }),
+      row(h("button", { text: "Speichern", onclick: save }), h("button", { class: "sec", text: "Abbrechen", onclick: () => { this._msg = null; this._render(); } })), ...extra));
+  }
+}
+if (!customElements.get("medikamentenplan-pflege-card")) customElements.define("medikamentenplan-pflege-card", MedikamentenplanPflegeCard);
+window.customCards.push({ type: "medikamentenplan-pflege-card", name: "Medikamentenplan Pflege", description: "Medikamente eines Plans anlegen/bearbeiten (ohne Admin)" });

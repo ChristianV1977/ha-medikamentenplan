@@ -7,7 +7,10 @@
   - Nachrichten enthalten bewusst keine Medikamentennamen, nur Anzahlen.
   - Service `medikamentenplan.erinnerung_testen` (Feld `plan`): Testnachricht, als TEST markiert, an das Ziel des Plans.
   - Einschraenkungen: Medikamente im Intervall- oder Bedarfsmodus loesen keine Zeit-Erinnerung aus; verpasste Minute (HA aus) wird nicht nachgeholt; die Schwelle gilt nur fuer die Erinnerung, nicht fuer Status/Nachbestelldatum.
-- Tests: `tests/test_erinnerung.py`.
+- **Medikamente ohne Admin pflegen** (Options-Flow braucht Admin): neue Services `medikament_hinzufuegen`, `medikament_bearbeiten`, `medikament_absetzen`, `medikament_entfernen`, alle mit Pflichtfeld `plan`; Bearbeiten/Absetzen/Entfernen nehmen die `entity_id` des Reichweite-Sensors und pruefen, dass sie zum angegebenen Plan gehoert. Grenzen und Pflichtregeln wie im Options-Flow (Logik in `pflege.py`, vom Options-Flow mitgenutzt). Name, PZN (mit Pruefziffer, lernt die Zuordnung), Darreichungsform, Dosis je Zeitfenster, Intervall/Bedarf, Packungsgroesse, Anbruch, Notiz u. a.; beim Bearbeiten aendern nur gelieferte Felder, Leerstring loescht ein optionales Feld, der Vorrat bleibt. Entfernen verlangt `bestaetigen: true`.
+- **Neue Karte** `custom:medikamentenplan-pflege-card` (Option `plan`, Script 1.6.8): Liste der Medikamente dieses Plans, Formular zum Anlegen und Bearbeiten, Absetzen/Wieder aufnehmen, Entfernen mit Zweit-Tipp. Nur DOM per textContent.
+- Hinweis: Normale HA-Nutzer duerfen Services aufrufen; die Trennung zwischen Plaenen ist Anzeige- und Plan-Pruefung, kein Zugriffsschutz.
+- Tests: `tests/test_erinnerung.py`, `tests/test_pflege.py`.
 
 ## 1.8.0 (2026-11-03)
 - **Personensicht:** Die Services `scan_code`, `vorrat_hinzufuegen`, `packung_anfangen` und `pzn_zuordnen` haben ein optionales Feld `plan` (Titel des Plans). Damit werden PZN-Treffer, Kandidatenliste und `entity_id`-Pruefung nur in diesem Plan gesucht; ohne `plan` bleibt das Verhalten unveraendert. Die Seriennummer-Doppelsperre gilt bewusst weiter planuebergreifend.

@@ -1,6 +1,8 @@
 """Scan-/Vorrat-Services (domainweit, mit Antwort fuer die Scanner-Karte)."""
 from __future__ import annotations
 
+from datetime import date
+
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
@@ -9,13 +11,54 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import dt as dt_util
 
-from . import calc, gs1
-from .const import DOMAIN, SIGNAL_SCAN
+from . import calc, gs1, pflege
+from .const import DOMAIN, FORMS, MODES, SIGNAL_SCAN
 
 CODE = {vol.Required("code"): cv.string}
 ENT = {vol.Optional("entity_id"): cv.entity_id}
 PLAN = {vol.Optional("plan"): cv.string}  # Personensicht: nur Plaene mit diesem Titel (Scan-Karte Option plan)
 GROESSE = {vol.Optional("packungsgroesse"): vol.All(vol.Coerce(float), vol.Range(min=0.01))}
+
+
+def _n(**kw):
+    return vol.All(vol.Coerce(float), vol.Range(**kw))
+
+
+# Pflege-Felder: gleiche Grenzen wie das Formular im Options-Flow
+PFLEGE = {
+    vol.Optional("name"): vol.All(cv.string, vol.Length(min=1, max=80)), vol.Optional("pzn"): cv.string,
+    vol.Optional("darreichungsform"): vol.In(FORMS), vol.Optional("dosis"): _n(min=0.01), vol.Optional("einheit"): cv.string,
+    vol.Optional("modus"): vol.In(MODES),
+    **{vol.Optional(k): _n(min=0) for k in ("morgens", "mittags", "abends", "nachts", "pro_tag", "bedarf_pro_woche", "restbestand", "vorlauf_tage")},
+    vol.Optional("intervall_tage"): _n(min=1), vol.Optional("packungsgroesse"): _n(min=0.01), vol.Optional("anbruch"): cv.date,
+    vol.Optional("hersteller"): cv.string, vol.Optional("wirkstoff"): cv.string, vol.Optional("zweck"): cv.string,
+    vol.Optional("notiz"): cv.string, vol.Optional("rezeptpflichtig"): cv.boolean,
+}
+PLAN_REQ = {vol.Required("plan"): cv.string}
+
+
+def _plan(hass, name):
+    plans = _plans(hass, name)
+    if not plans:
+        raise ServiceValidationError(f"Plan {name} unbekannt.")
+    return plans[0]
+
+
+def _fields(call) -> dict:
+    return {k: (v.isoformat() if isinstance(v, date) else v) for k, v in call.data.items() if k not in ("plan", "entity_id", "bestaetigen", "abgesetzt", "abgesetzt_am")}
+
+
+def _check(med):
+    if errs := pflege.validate(med):
+        raise ServiceValidationError(f"Angabe fehlt oder ungueltig: {', '.join(errs)}")
+
+
+async def _learn(plan, med_id, pzn, groesse):
+    try:
+        key = pflege.normalize_pzn(pzn)
+    except ValueError as e:
+        raise ServiceValidationError(str(e)) from e
+    await plan.async_learn_pzn(key, med_id, groesse)
 
 
 def _plans(hass, name=None):
@@ -158,6 +201,48 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             raise ServiceValidationError(f"Plan {call.data['plan']} unbekannt.")
         await plans[0].async_send("[TEST] Testnachricht des Medikamentenplans, keine echte Erinnerung.", "Medikamentenplan TEST")
 
+    async def medikament_hinzufuegen(call: ServiceCall):
+        plan, today = _plan(hass, call.data["plan"]), dt_util.now().date()
+        if not call.data.get("name") or "packungsgroesse" not in call.data:
+            raise ServiceValidationError("name und packungsgroesse sind Pflicht.")
+        pzn = call.data.get("pzn")
+        if pzn:
+            # PZN vor dem Anlegen pruefen, damit kein halbes Medikament entsteht
+            try:
+                pflege.normalize_pzn(pzn)
+            except ValueError as e:
+                raise ServiceValidationError(str(e)) from e
+        med = pflege.build_new(_fields(call), today)
+        _check(med)
+        med_id = await plan.async_add(med)
+        if pzn:
+            await _learn(plan, med_id, pzn, med.get("packungsgroesse"))
+        return {"med_id": med_id, "name": med["name"], "plan": plan.name}
+
+    async def medikament_bearbeiten(call: ServiceCall):
+        plan, med_id = resolve_entity(hass, call.data["entity_id"], call.data["plan"])
+        if pzn := call.data.get("pzn"):
+            try:
+                pflege.normalize_pzn(pzn)
+            except ValueError as e:
+                raise ServiceValidationError(str(e)) from e
+        med = pflege.build_edit(plan.meds[med_id], _fields(call), dt_util.now().date())
+        _check(med)
+        await plan.async_update(med_id, med)
+        if pzn:
+            await _learn(plan, med_id, pzn, med.get("packungsgroesse"))
+        return {"med_id": med_id, "name": med["name"], "plan": plan.name}
+
+    async def medikament_absetzen(call: ServiceCall):
+        plan, med_id = resolve_entity(hass, call.data["entity_id"], call.data["plan"])
+        await plan.async_update(med_id, calc.set_stopped(plan.meds[med_id], call.data["abgesetzt"], call.data.get("abgesetzt_am"), dt_util.now().date()))
+
+    async def medikament_entfernen(call: ServiceCall):
+        plan, med_id = resolve_entity(hass, call.data["entity_id"], call.data["plan"])
+        if not call.data["bestaetigen"]:
+            raise ServiceValidationError("Zum Entfernen bestaetigen=true setzen.")
+        await plan.async_delete(med_id)
+
     reg = hass.services.async_register
     reg(DOMAIN, "scan_code", scan_code, vol.Schema({**CODE, **PLAN}), supports_response=SupportsResponse.ONLY)
     reg(DOMAIN, "scan_abbrechen", scan_abbrechen, vol.Schema({}))
@@ -172,3 +257,10 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         vol.Schema({vol.Required("entity_id"): cv.entity_id, vol.Optional("anbruchdatum"): cv.date}))
     reg(DOMAIN, "vorrat_entfernen", vorrat_entfernen, vol.Schema({vol.Required("entity_id"): cv.entity_id}))
     reg(DOMAIN, "erinnerung_testen", erinnerung_testen, vol.Schema({vol.Required("plan"): cv.string}))
+    reg(DOMAIN, "medikament_hinzufuegen", medikament_hinzufuegen, vol.Schema({**PLAN_REQ, **PFLEGE}), supports_response=SupportsResponse.OPTIONAL)
+    reg(DOMAIN, "medikament_bearbeiten", medikament_bearbeiten, vol.Schema({**PLAN_REQ, vol.Required("entity_id"): cv.entity_id, **PFLEGE}),
+        supports_response=SupportsResponse.OPTIONAL)
+    reg(DOMAIN, "medikament_absetzen", medikament_absetzen, vol.Schema({**PLAN_REQ, vol.Required("entity_id"): cv.entity_id,
+        vol.Optional("abgesetzt", default=True): cv.boolean, vol.Optional("abgesetzt_am"): cv.date}))
+    reg(DOMAIN, "medikament_entfernen", medikament_entfernen, vol.Schema({**PLAN_REQ, vol.Required("entity_id"): cv.entity_id,
+        vol.Optional("bestaetigen", default=False): cv.boolean}))

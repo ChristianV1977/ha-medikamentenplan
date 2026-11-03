@@ -157,3 +157,332 @@ erinnerung_testen:
       required: true
       selector:
         text:
+
+medikament_hinzufuegen:
+  fields:
+    plan:
+      required: true
+      selector:
+        text:
+    name:
+      required: true
+      selector:
+        text:
+    pzn:
+      required: false
+      selector:
+        text:
+    darreichungsform:
+      required: false
+      selector:
+        select:
+          options: [tablette, retardtablette, filmtablette, brausetablette, schmelztablette, kautablette, magensaftresistente_tablette, kapsel, hartkapsel, magensaftresistente_hartkapsel, weichkapsel, retardkapsel, tropfen, augentropfen, saft, spray, nasenspray, dosieraerosol, inhalator_pulver, salbe, pflaster, zaepfchen, spritze, pulver, sonstige]
+    dosis:
+      required: false
+      selector:
+        number:
+          min: 0.01
+          max: 10000
+          step: any
+          mode: box
+    einheit:
+      required: false
+      selector:
+        text:
+    modus:
+      required: false
+      selector:
+        select:
+          options: [taeglich, intervall, bedarf]
+    morgens:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 10000
+          step: any
+          mode: box
+    mittags:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 10000
+          step: any
+          mode: box
+    abends:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 10000
+          step: any
+          mode: box
+    nachts:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 10000
+          step: any
+          mode: box
+    pro_tag:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 10000
+          step: any
+          mode: box
+    bedarf_pro_woche:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 10000
+          step: any
+          mode: box
+    restbestand:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 10000
+          step: any
+          mode: box
+    vorlauf_tage:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 10000
+          step: any
+          mode: box
+    intervall_tage:
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 10000
+          step: any
+          mode: box
+    packungsgroesse:
+      required: true
+      selector:
+        number:
+          min: 0.01
+          max: 10000
+          step: any
+          mode: box
+    anbruch:
+      required: false
+      selector:
+        date:
+    hersteller:
+      required: false
+      selector:
+        text:
+    wirkstoff:
+      required: false
+      selector:
+        text:
+    zweck:
+      required: false
+      selector:
+        text:
+    notiz:
+      required: false
+      selector:
+        text:
+          multiline: true
+    rezeptpflichtig:
+      required: false
+      selector:
+        boolean:
+
+medikament_bearbeiten:
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          integration: medikamentenplan
+          domain: sensor
+    plan:
+      required: true
+      selector:
+        text:
+    name:
+      required: false
+      selector:
+        text:
+    pzn:
+      required: false
+      selector:
+        text:
+    darreichungsform:
+      required: false
+      selector:
+        select:
+          options: [tablette, retardtablette, filmtablette, brausetablette, schmelztablette, kautablette, magensaftresistente_tablette, kapsel, hartkapsel, magensaftresistente_hartkapsel, weichkapsel, retardkapsel, tropfen, augentropfen, saft, spray, nasenspray, dosieraerosol, inhalator_pulver, salbe, pflaster, zaepfchen, spritze, pulver, sonstige]
+    dosis:
+      required: false
+      selector:
+        number:
+          min: 0.01
+          max: 10000
+          step: any
+          mode: box
+    einheit:
+      required: false
+      selector:
+        text:
+    modus:
+      required: false
+      selector:
+        select:
+          options: [taeglich, intervall, bedarf]
+    morgens:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 10000
+          step: any
+          mode: box
+    mittags:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 10000
+          step: any
+          mode: box
+    abends:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 10000
+          step: any
+          mode: box
+    nachts:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 10000
+          step: any
+          mode: box
+    pro_tag:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 10000
+          step: any
+          mode: box
+    bedarf_pro_woche:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 10000
+          step: any
+          mode: box
+    restbestand:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 10000
+          step: any
+          mode: box
+    vorlauf_tage:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 10000
+          step: any
+          mode: box
+    intervall_tage:
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 10000
+          step: any
+          mode: box
+    packungsgroesse:
+      required: false
+      selector:
+        number:
+          min: 0.01
+          max: 10000
+          step: any
+          mode: box
+    anbruch:
+      required: false
+      selector:
+        date:
+    hersteller:
+      required: false
+      selector:
+        text:
+    wirkstoff:
+      required: false
+      selector:
+        text:
+    zweck:
+      required: false
+      selector:
+        text:
+    notiz:
+      required: false
+      selector:
+        text:
+          multiline: true
+    rezeptpflichtig:
+      required: false
+      selector:
+        boolean:
+
+medikament_absetzen:
+  fields:
+    plan:
+      required: true
+      selector:
+        text:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          integration: medikamentenplan
+          domain: sensor
+    abgesetzt:
+      required: false
+      default: true
+      selector:
+        boolean:
+    abgesetzt_am:
+      required: false
+      selector:
+        date:
+
+medikament_entfernen:
+  fields:
+    plan:
+      required: true
+      selector:
+        text:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          integration: medikamentenplan
+          domain: sensor
+    bestaetigen:
+      required: true
+      selector:
+        boolean:

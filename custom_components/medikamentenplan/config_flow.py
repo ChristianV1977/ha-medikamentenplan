@@ -7,7 +7,7 @@ from homeassistant.helpers import selector as sel
 from homeassistant.util import dt as dt_util
 from homeassistant.util import slugify
 
-from . import calc
+from . import calc, pflege
 from .catalog import fmt, hersteller, startliste
 from .const import CATALOG_FIELDS, DOMAIN, FORMS, MODES
 
@@ -56,19 +56,7 @@ def med_schema(hersteller_liste=()) -> vol.Schema:
 
 
 def _clean(inp: dict) -> dict:
-    """Leere Optionalfelder entfernen, Zahlen normalisieren."""
-    med = {k: v for k, v in inp.items() if v not in (None, "")}
-    for k in ("morgens", "mittags", "abends", "nachts"):
-        if not float(med.get(k, 0) or 0):
-            med.pop(k, None)  # 0/leer = nicht gesetzt (Migration: alte Eintraege ohne Schema bleiben gueltig)
-    if med.get("abgesetzt"):
-        med = calc.set_stopped(med, True, calc.parse_date(med.get("abgesetzt_am")), dt_util.now().date())
-    else:
-        med = calc.set_stopped(med, False)
-    for k in ("intervall_tage", "vorlauf_tage"):
-        if k in med:
-            med[k] = int(med[k])
-    return med
+    return pflege.clean(inp, dt_util.now().date())
 
 
 class MedConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -111,12 +99,7 @@ class MedOptionsFlow(OptionsFlow):
         return self.async_show_form(step_id=step, data_schema=schema, errors=errors)
 
     def _validate(self, med):
-        mode = med["modus"]
-        if mode == "taeglich" and not med.get("pro_tag") and not calc.schema_sum(med):
-            return {"pro_tag": "pflicht"}
-        if mode == "bedarf" and not med.get("bedarf_pro_woche"):
-            return {"bedarf_pro_woche": "pflicht"}
-        return {}
+        return pflege.validate(med)
 
     # --- hinzufuegen (optional vorbefuellt aus Katalog) ---
     async def async_step_add(self, user_input=None):
