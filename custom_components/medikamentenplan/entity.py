@@ -47,3 +47,23 @@ class MedEntity(Entity):
     def _refresh(self) -> None:
         if self.med_id in self.plan.meds:
             self.async_write_ha_state()
+
+
+class PlanEntity(Entity):
+    """Plan-weite Einstellung (Geraet = Plan), z. B. Erinnerungen."""
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+
+    def __init__(self, plan: Plan, key: str) -> None:
+        self.plan = plan
+        self._attr_translation_key = key
+        self._attr_unique_id = f"{plan.entry.entry_id}_plan_{key}"
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, plan.entry.entry_id)})
+
+    async def async_added_to_hass(self) -> None:
+        self.async_on_remove(async_dispatcher_connect(
+            self.hass, SIGNAL_UPDATE.format(self.plan.entry.entry_id), self._refresh))
+
+    @callback
+    def _refresh(self) -> None:
+        self.async_write_ha_state()

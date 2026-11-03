@@ -5,11 +5,12 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import DOMAIN, SIGNAL_NEW
-from .entity import MedEntity
+from .entity import MedEntity, PlanEntity
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
     plan = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities([SchwelleTage(plan)])
 
     @callback
     def add(med_id):
@@ -58,3 +59,22 @@ class AnzahlPackungen(MedEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         self.plan.packs[self.med_id] = int(value)
         self.plan.notify()
+
+
+class SchwelleTage(PlanEntity, NumberEntity):
+    """Nachkauf-Erinnerung, wenn die Reichweite inkl. Vorrat so viele Tage oder weniger betraegt."""
+    _attr_mode = NumberMode.BOX
+    _attr_native_min_value = 1
+    _attr_native_max_value = 90
+    _attr_native_step = 1
+    _attr_native_unit_of_measurement = "d"
+
+    def __init__(self, plan):
+        super().__init__(plan, "schwelle_tage")
+
+    @property
+    def native_value(self):
+        return float(self.plan.settings["schwelle_tage"])
+
+    async def async_set_native_value(self, value: float) -> None:
+        await self.plan.async_set_setting("schwelle_tage", int(value))

@@ -253,6 +253,36 @@
    },
    "anzahl_packungen": {
     "name": "Number of packs"
+   },
+   "schwelle_tage": {
+    "name": "Nachkauf ab Reichweite (Tage)"
+   }
+  },
+  "switch": {
+   "erinnerungen_aktiv": {
+    "name": "Erinnerungen aktiv"
+   }
+  },
+  "time": {
+   "zeit_morgens": {
+    "name": "Erinnerung morgens"
+   },
+   "zeit_mittags": {
+    "name": "Erinnerung mittags"
+   },
+   "zeit_abends": {
+    "name": "Erinnerung abends"
+   },
+   "zeit_nachts": {
+    "name": "Erinnerung nachts"
+   },
+   "zeit_nachkauf": {
+    "name": "Nachkauf-Erinnerung um"
+   }
+  },
+  "select": {
+   "ziel": {
+    "name": "Erinnerungsziel"
    }
   }
  },

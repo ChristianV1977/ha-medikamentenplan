@@ -192,6 +192,9 @@
   "select": {
    "hersteller": {
     "name": "Manufacturer"
+   },
+   "ziel": {
+    "name": "Reminder target"
    }
   },
   "number": {
@@ -200,6 +203,31 @@
    },
    "anzahl_packungen": {
     "name": "Number of packs"
+   },
+   "schwelle_tage": {
+    "name": "Refill threshold (days)"
+   }
+  },
+  "switch": {
+   "erinnerungen_aktiv": {
+    "name": "Reminders active"
+   }
+  },
+  "time": {
+   "zeit_morgens": {
+    "name": "Reminder morning"
+   },
+   "zeit_mittags": {
+    "name": "Reminder noon"
+   },
+   "zeit_abends": {
+    "name": "Reminder evening"
+   },
+   "zeit_nachts": {
+    "name": "Reminder night"
+   },
+   "zeit_nachkauf": {
+    "name": "Refill reminder at"
    }
   }
  },

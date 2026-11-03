@@ -41,6 +41,8 @@ async def async_setup_entry(hass: HomeAssistant, entry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     # taeglich neu berechnen (Mitternacht); beim Start rechnen die Entities ohnehin frisch
     entry.async_on_unload(async_track_time_change(hass, lambda _now: plan.notify(), hour=0, minute=0, second=5))
+    # Erinnerungen: pruefen jede Minute (Standard AUS, nur bei aktivem Plan mit Ziel passiert etwas)
+    entry.async_on_unload(async_track_time_change(hass, lambda now: hass.async_create_task(plan.async_check_reminders(now)), second=0))
     return True
 
 

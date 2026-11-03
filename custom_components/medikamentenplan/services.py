@@ -151,6 +151,13 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         plan, med_id = resolve_entity(hass, call.data["entity_id"])
         await plan.async_remove_last_stock(med_id)
 
+    async def erinnerung_testen(call: ServiceCall):
+        """Testnachricht (als TEST markiert) an das Ziel des Plans, unabhaengig vom Schalter Erinnerungen aktiv."""
+        plans = _plans(hass, call.data["plan"])
+        if not plans:
+            raise ServiceValidationError(f"Plan {call.data['plan']} unbekannt.")
+        await plans[0].async_send("[TEST] Testnachricht des Medikamentenplans, keine echte Erinnerung.", "Medikamentenplan TEST")
+
     reg = hass.services.async_register
     reg(DOMAIN, "scan_code", scan_code, vol.Schema({**CODE, **PLAN}), supports_response=SupportsResponse.ONLY)
     reg(DOMAIN, "scan_abbrechen", scan_abbrechen, vol.Schema({}))
@@ -164,3 +171,4 @@ async def async_setup_services(hass: HomeAssistant) -> None:
     reg(DOMAIN, "aus_vorrat_anbrechen", aus_vorrat_anbrechen,
         vol.Schema({vol.Required("entity_id"): cv.entity_id, vol.Optional("anbruchdatum"): cv.date}))
     reg(DOMAIN, "vorrat_entfernen", vorrat_entfernen, vol.Schema({vol.Required("entity_id"): cv.entity_id}))
+    reg(DOMAIN, "erinnerung_testen", erinnerung_testen, vol.Schema({vol.Required("plan"): cv.string}))

@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.9.0 (2026-11-03)
+- **Erinnerungen je Plan**, in HA bedienbar ueber Entities am Plan-Geraet (Standard AUS, niemand bekommt ungefragt Nachrichten):
+  - `switch` Erinnerungen aktiv, vier `time` (morgens/mittags/abends/nachts) und ein `time` fuer die Nachkauf-Erinnerung, `number` Nachkauf ab Reichweite (Tage, Standard 7), `select` Erinnerungsziel (ein `notify`-Dienst, z. B. `mobile_app_<geraet>`).
+  - Einnahme-Erinnerung: zur eingestellten Uhrzeit, wenn der Plan in diesem Zeitfenster taegliche, nicht abgesetzte Medikamente hat. Nachkauf-Erinnerung: taeglich zur eingestellten Zeit, wenn die Reichweite inkl. Vorrat die Schwelle erreicht. Jede Art hoechstens einmal pro Tag (auch ueber Neustarts, im Store).
+  - Nachrichten enthalten bewusst keine Medikamentennamen, nur Anzahlen.
+  - Service `medikamentenplan.erinnerung_testen` (Feld `plan`): Testnachricht, als TEST markiert, an das Ziel des Plans.
+  - Einschraenkungen: Medikamente im Intervall- oder Bedarfsmodus loesen keine Zeit-Erinnerung aus; verpasste Minute (HA aus) wird nicht nachgeholt; die Schwelle gilt nur fuer die Erinnerung, nicht fuer Status/Nachbestelldatum.
+- Tests: `tests/test_erinnerung.py`.
+
 ## 1.8.0 (2026-11-03)
 - **Personensicht:** Die Services `scan_code`, `vorrat_hinzufuegen`, `packung_anfangen` und `pzn_zuordnen` haben ein optionales Feld `plan` (Titel des Plans). Damit werden PZN-Treffer, Kandidatenliste und `entity_id`-Pruefung nur in diesem Plan gesucht; ohne `plan` bleibt das Verhalten unveraendert. Die Seriennummer-Doppelsperre gilt bewusst weiter planuebergreifend.
 - Scanner-Karte (Script 1.6.7): neue Option `plan: <Plan-Titel>` reicht das Feld an die Services weiter. So zeigt der Scan-Dialog einer Person nie Medikamente eines anderen Plans.

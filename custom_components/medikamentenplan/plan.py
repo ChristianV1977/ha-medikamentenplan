@@ -1,6 +1,7 @@
 """Plan = ein Config-Entry mit seinen Medikamenten, persistiert im HA Store."""
 from __future__ import annotations
 
+import logging
 import uuid
 
 from homeassistant.core import HomeAssistant
@@ -10,8 +11,11 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
-from . import calc
+from . import calc, erinnerung
 from .const import DOMAIN, SIGNAL_NEW, SIGNAL_UPDATE, STORAGE_VERSION
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class Plan:
@@ -24,6 +28,7 @@ class Plan:
         self.packs: dict[str, int] = {}  # Vorgabe Anzahl Packungen je Medikament, nur im Speicher
         self.pzn: dict[str, dict] = {}  # PZN -> {"med": med_id, "groesse": float|None}
         self.serials: dict[str, str] = {}  # gebuchte Seriennummern "pzn|serial" -> Datum
+        self.settings: dict = erinnerung.default_settings()  # Erinnerungen, je Plan
 
     @property
     def name(self) -> str:
@@ -33,11 +38,12 @@ class Plan:
         raw = await self.store.async_load()
         data = calc.migrate_store(raw)
         self.meds, self.pzn, self.serials = data["meds"], data["pzn"], data["serials"]
+        self.settings = erinnerung.merge_settings(data.get("settings"))
         if raw is not None and raw.get("schema") != 2:
             await self._save()  # Migration auf Schema 2 persistieren (Backup liegt vorher)
 
     async def _save(self) -> None:
-        await self.store.async_save({"schema": 2, "meds": self.meds, "pzn": self.pzn, "serials": self.serials})
+        await self.store.async_save({"schema": 2, "meds": self.meds, "pzn": self.pzn, "serials": self.serials, "settings": self.settings})
 
     def compute(self, med_id: str) -> dict:
         return calc.compute(self.meds[med_id], dt_util.now().date())
@@ -117,6 +123,35 @@ class Plan:
     async def async_book_serial(self, key: str) -> None:
         self.serials = calc.remember_serial(self.serials, key, dt_util.now().date())
         await self._save()
+
+    async def async_set_setting(self, key: str, value, slot: str | None = None) -> None:
+        if slot:
+            self.settings["zeiten"][slot] = value
+        else:
+            self.settings[key] = value
+        await self._save()
+        self.notify()
+
+    async def async_send(self, message: str, title: str = erinnerung.TITLE) -> None:
+        """Nachricht an das Ziel dieses Plans (notify-Dienst ohne Praefix)."""
+        ziel = self.settings.get("ziel")
+        if not ziel:
+            raise ServiceValidationError("Kein Benachrichtigungsziel gesetzt.")
+        await self.hass.services.async_call("notify", ziel, {"title": title, "message": message}, blocking=True)
+
+    async def async_check_reminders(self, now=None) -> None:
+        now = dt_util.as_local(now) if now else dt_util.now()
+        changed = False
+        for r in erinnerung.due(self.settings, self.meds, now):
+            try:
+                await self.async_send(r["message"], r["title"])
+            except Exception as err:  # noqa: BLE001 - ein Zielfehler darf die Minute-Schleife nicht stoppen
+                _LOGGER.warning("Erinnerung %s (%s) nicht zugestellt: %s", r["key"], self.name, err)
+                continue
+            self.settings["gesendet"][r["key"]] = now.date().isoformat()
+            changed = True
+        if changed:
+            await self._save()
 
     def notify(self) -> None:
         async_dispatcher_send(self.hass, SIGNAL_UPDATE.format(self.entry.entry_id))

@@ -150,3 +150,10 @@ vorrat_entfernen:
         entity:
           integration: medikamentenplan
           domain: sensor
+
+erinnerung_testen:
+  fields:
+    plan:
+      required: true
+      selector:
+        text:
