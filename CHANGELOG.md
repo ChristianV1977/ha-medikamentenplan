@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.8.0 (2026-11-03)
+- **Personensicht:** Die Services `scan_code`, `vorrat_hinzufuegen`, `packung_anfangen` und `pzn_zuordnen` haben ein optionales Feld `plan` (Titel des Plans). Damit werden PZN-Treffer, Kandidatenliste und `entity_id`-Pruefung nur in diesem Plan gesucht; ohne `plan` bleibt das Verhalten unveraendert. Die Seriennummer-Doppelsperre gilt bewusst weiter planuebergreifend.
+- Scanner-Karte (Script 1.6.7): neue Option `plan: <Plan-Titel>` reicht das Feld an die Services weiter. So zeigt der Scan-Dialog einer Person nie Medikamente eines anderen Plans.
+- Hinweis: Das ist eine Anzeige-/Suchtrennung, kein Zugriffsschutz; Entities bleiben fuer alle HA-Nutzer lesbar. Die Trennung im Dashboard erfolgt ueber Sichtbarkeit pro Nutzer.
+
 ## 1.7.2 (2026-10-30)
 - Scanner-Karte (Script 1.6.6): neue Option `camera: user | environment` (Standard environment). `user` nimmt die Frontkamera (facingMode ideal user), Retry-Kette: user mit Aufloesung, user ohne, Geraete mit Label front/vorder/user (oder `camera_label`, Teilstring), dann video:true. Vorschau wird gespiegelt, die Erkennung liest den ungespiegelten Frame. Debug-Log nennt Geraet und facingMode.
 

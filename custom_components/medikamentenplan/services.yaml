@@ -31,6 +31,10 @@ neue_packung:
 
 scan_code:
   fields:
+    plan:
+      required: false
+      selector:
+        text:
     code:
       required: true
       selector:
@@ -40,6 +44,10 @@ scan_abbrechen:
 
 vorrat_hinzufuegen:
   fields:
+    plan:
+      required: false
+      selector:
+        text:
     code:
       required: true
       selector:
@@ -69,6 +77,10 @@ vorrat_hinzufuegen:
 
 packung_anfangen:
   fields:
+    plan:
+      required: false
+      selector:
+        text:
     code:
       required: true
       selector:
@@ -94,6 +106,10 @@ packung_anfangen:
 
 pzn_zuordnen:
   fields:
+    plan:
+      required: false
+      selector:
+        text:
     code:
       required: true
       selector:

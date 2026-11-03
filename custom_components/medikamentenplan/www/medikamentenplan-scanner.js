@@ -86,7 +86,7 @@ class MedikamentenplanScanCard extends HTMLElement {
   _abort(reason) { this._stop(reason); if (this._st) { this._st.className = "err"; this._st.textContent = "Beendet: " + reason; } this._state = "error"; }
 
   async _ws(service, data, response = true) {
-    const r = await this._hass.callWS({ type: "call_service", domain: "medikamentenplan", service, service_data: data, return_response: response });
+    const r = await this._hass.callWS({ type: "call_service", domain: "medikamentenplan", service, service_data: this._config.plan ? { ...data, plan: this._config.plan } : data, return_response: response });
     return r.response || {};
   }
 
