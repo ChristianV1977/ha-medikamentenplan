@@ -42,7 +42,10 @@ async def async_setup_entry(hass: HomeAssistant, entry) -> bool:
     # taeglich neu berechnen (Mitternacht); beim Start rechnen die Entities ohnehin frisch
     entry.async_on_unload(async_track_time_change(hass, lambda _now: plan.notify(), hour=0, minute=0, second=5))
     # Erinnerungen: pruefen jede Minute (Standard AUS, nur bei aktivem Plan mit Ziel passiert etwas)
-    entry.async_on_unload(async_track_time_change(hass, lambda now: hass.async_create_task(plan.async_check_reminders(now)), second=0))
+    async def _erinnerungen_pruefen(now):  # Coroutine statt Lambda: Lambda lief im Thread-Pool (async_create_task nicht thread-sicher)
+        await plan.async_check_reminders(now)
+
+    entry.async_on_unload(async_track_time_change(hass, _erinnerungen_pruefen, second=0))
     return True
 
 
